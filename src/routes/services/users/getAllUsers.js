@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
-const logger = require('../../../utils/logger');
 const { queryDatabase } = require('../../../services/dbQuery');
 router.use(authMiddleware);
 
@@ -20,7 +19,6 @@ console.log("getallstudents")
         })
     }
     catch {
-        logger.warn('Invalid user', { user_id });
         res.status(401).json({ error: 'Invalid user' });
     }
 })

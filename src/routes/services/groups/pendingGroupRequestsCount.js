@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
-const logger = require('../../../utils/logger');
 const { queryDatabase } = require('../../../services/dbQuery');
 const APP_CONFIG = require('../../../../config');
 
@@ -36,7 +35,6 @@ GROUP BY g.id;
             pendingRequestsCount: result   // each row = { group_id, requests_count }
         });
     } catch (error) {
-        logger.warn('Invalid user', { mentor_id });
         console.error("error fetching group requests", error);
         res.status(500).json({ error: 'Internal server error' });
     }

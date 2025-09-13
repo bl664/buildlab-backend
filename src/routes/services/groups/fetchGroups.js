@@ -2,7 +2,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
-const logger = require('../../../utils/logger');
 const { queryDatabase } = require('../../../services/dbQuery');
 const APP_CONFIG = require('../../../../config')
 router.use(authMiddleware);
@@ -43,7 +42,6 @@ console.log("student_groups", student_groups)
             groups: student_groups
         })
     } catch(error) {
-        logger.warn('Invalid user', { mentor_id });
         res.status(401).json({ error: 'Invalid user' });
     }
 })

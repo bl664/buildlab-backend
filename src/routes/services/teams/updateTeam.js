@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
-const logger = require('../../../utils/logger');
 const { queryDatabase } = require('../../../services/dbQuery');
 const APP_CONFIG = require('../../../../config');
 const jwt = require('jsonwebtoken');
@@ -65,7 +64,6 @@ console.log("student id is ", student)
 
   } catch (error) {
     console.error('Error updating team:', error);
-    logger.warn('Invalid user or error updating team', { error: error.message });
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

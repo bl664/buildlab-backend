@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
-const logger = require('../../../utils/logger');
 const { queryDatabase } = require('../../../services/dbQuery');
 router.use(authMiddleware);     
 
@@ -35,7 +34,6 @@ console.log("Update result is", result);
         res.status(200).json({ message: 'Daily task updated successfully', id: resultId });
 
     } catch (error) {
-        logger.error("Error updating daily task", { error });
         res.status(500).json({ error: 'Error updating daily task' });
     }
 }

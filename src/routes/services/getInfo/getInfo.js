@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
-const logger = require('../../../utils/logger');
 const { queryDatabase } = require('../../../services/dbQuery');
 
 router.use(authMiddleware);
@@ -21,7 +20,6 @@ router.get('/', async (req, res) => {
     const result = await queryDatabase(query, values);
 
     if (!result || result.length === 0) {
-      logger.warn('User not found', { user_id });
       return res.status(404).json({ error: 'User not found' });
     }
 
@@ -33,7 +31,6 @@ router.get('/', async (req, res) => {
       result: user,
     });
   } catch (error) {
-    logger.error('Error fetching user', { error, user_id });
     res.status(500).json({ error: 'Internal server error' });
   }
 });

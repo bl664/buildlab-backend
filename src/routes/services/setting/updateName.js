@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
-const logger = require('../../../utils/logger');
 const { queryDatabase } = require('../../../services/dbQuery');
 
 router.use(authMiddleware);
@@ -140,11 +139,6 @@ router.put('/', async (req, res) => {
         }
 
         console.error('Profile update error:', error);
-        logger.error('Profile update failed', { 
-            userId: user_id, 
-            error: error.message,
-            stack: error.stack 
-        });
 
         res.status(500).json({ 
             error: 'Error updating profile',

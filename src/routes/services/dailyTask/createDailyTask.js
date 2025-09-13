@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
-const logger = require('../../../utils/logger');
 const { queryDatabase } = require('../../../services/dbQuery');
 router.use(authMiddleware);     
 
@@ -27,12 +26,10 @@ console.log("title is", title, status);
         const taskResult = await queryDatabase(query, values);
         const taskId = taskResult[0].id;      
         const task = taskResult[0]
-        logger.info("Daily task created successfully", { taskId }); 
 
         res.status(201).json({ message: 'Daily task created successfully', task });
 
     } catch (error) {
-        logger.error("Error creating daily task", { error });
         res.status(500).json({ error: 'Error creating daily task' });
     }
 }

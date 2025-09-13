@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
-const logger = require('../../../utils/logger');
 const { queryDatabase } = require('../../../services/dbQuery');
 router.use(authMiddleware);
 
@@ -35,7 +34,6 @@ console.log("Delete result is", result);
         console.log("Daily task deleted successfully", { id });
         res.status(200).json({ message: 'Deleted successfully' });
     } catch (error) {
-        logger.error("Error deleting daily task", { error });
         res.status(500).json({ error: 'Error deleting daily task' });
     }
 }

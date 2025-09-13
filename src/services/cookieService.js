@@ -1,6 +1,5 @@
 const APP_CONFIG = require('../../config');
 const { generateToken } = require('../utils/tokenManager');
-const logger = require('../utils/logger');
 
 const sendAuthCookie = (res, user) => {
   const tokenPayload = {
@@ -20,14 +19,6 @@ res.cookie(APP_CONFIG.BL_AUTH_COOKIE_NAME, token, {
   maxAge: APP_CONFIG.BL_AUTH_COOKIE_MAXAGE,
   path: '/'
 });
-
-  logger.info('Auth cookie sent', { 
-    user: {
-      id: user.id,
-      email: user.email,
-    }
-  });
-
   return {
     id: user.id,
     email: user.email,
@@ -47,7 +38,6 @@ const clearAuthCookie = (res) => {
     path: '/'
   });
 
-  logger.info('Auth cookie cleared');
   return true;
 };
 

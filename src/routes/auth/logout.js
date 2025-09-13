@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const logger = require('../../utils/logger');
 const APP_CONFIG = require('../../../config');
 
 router.post('/', async (req, res) => {
@@ -17,7 +16,6 @@ router.post('/', async (req, res) => {
 
     return res.status(200).json({ message: 'Logged out successfully' });
   } catch (error) {
-    logger.error('Error clearing user', { error });
     res.status(500).json({ error: 'Internal server error' });
   }
 });

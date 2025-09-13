@@ -4,8 +4,6 @@ const { isEmailValid } = require('../../utils/email');
 const { queryDatabase } = require('../../services/dbQuery');
 const { sendAuthCookie } = require('../../services/cookieService');
 const { checkEmailExists } = require('../../services/userVerifyService');
-
-const logger = require('../../utils/logger');
 const APP_CONFIG = require('../../../config');
 
 const router = express.Router();
@@ -15,7 +13,7 @@ router.post('/', async (req, res) => {
   const { email, password } = req.body || {};
 
 if (!email || !password) {
-    logger.warn('Missing required fields in signin', { 
+    console.log('Missing required fields in signin', { 
       hasEmail: !!email, 
       hasPassword: !!password 
     });
@@ -23,7 +21,7 @@ if (!email || !password) {
   }
 
   if (!isEmailValid(email)) {
-    logger.error('Invalid email format', { email });
+    console.log('Invalid email format', { email });
     return res.status(400).json({ error: 'Invalid email format' });
   }
 
@@ -47,7 +45,6 @@ if (!email || !password) {
     const result = await queryDatabase(userQuery, userValues);
     
     if (!result || result.length === 0) {
-      logger.warn('User data not found during signin', { email });
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -56,7 +53,6 @@ console.log("signin user is ", user)
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     
     if (!isPasswordValid) {
-      logger.warn('Invalid password attempt', { email, userId: user.id });
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 

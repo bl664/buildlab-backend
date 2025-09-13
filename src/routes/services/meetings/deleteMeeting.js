@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
-const logger = require('../../../utils/logger');
 const { queryDatabase, getTransactionClient } = require('../../../services/dbQuery');
 
 router.use(authMiddleware);
@@ -59,13 +58,11 @@ console.log("deleting meeting", id)
     });
 
   } catch (error) {
-    logger.error("Delete meeting error:", error);
-
     if (client) {
       try {
         await client.query('ROLLBACK');
       } catch (rollbackError) {
-        logger.error("Rollback failed:", rollbackError);
+        console.log("Rollback failed:", rollbackError);
       }
     }
 

@@ -1,8 +1,7 @@
 // Updated student-group-invite route
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../../../middleware/auth');
-const logger = require('../../../utils/logger');
+const authMiddleware = require('../../../middleware/auth')
 const {
     queryDatabase,
     getTransactionClient,
@@ -127,7 +126,6 @@ router.post('/', async (req, res) => {
         });
     } catch (error) {
         await rollbackTransaction(client);
-        logger.warn('Error in group invite', { student_id, error: error.message });
         console.error("error is", error);
         res.status(500).json({ error: 'Internal server error' });
     }

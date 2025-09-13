@@ -2,7 +2,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
-const logger = require('../../../utils/logger');
 const { queryDatabase } = require('../../../services/dbQuery');
 const APP_CONFIG = require('../../../../config')
 router.use(authMiddleware);
@@ -56,7 +55,6 @@ console.log("teams are", teams)
             result: teams
         })
     } catch(error) {
-        logger.warn('Invalid user', { student_id });
         res.status(401).json({ error: 'Invalid user' });
     }
 })

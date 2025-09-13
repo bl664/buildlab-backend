@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
-const logger = require('../../../utils/logger');
 const { queryDatabase } = require('../../../services/dbQuery');
 
 router.use(authMiddleware);
@@ -67,10 +66,6 @@ router.get('/', async (req, res) => {
 
     } catch (error) {
         console.error('Get profile error:', error);
-        logger.error('Get profile failed', { 
-            userId: user_id, 
-            error: error.message 
-        });
 
         res.status(500).json({ 
             error: 'Error fetching profile' 

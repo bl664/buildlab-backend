@@ -2,7 +2,6 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const { isEmailValid } = require('../../utils/email');
 const { queryDatabase, getTransactionClient } = require('../../services/dbQuery');
-const logger = require('../../utils/logger');
 const { sendAuthCookie } = require('../../services/cookieService');
 const { checkEmailExists } = require('../../services/userVerifyService');
 const APP_CONFIG = require('../../../config');
@@ -13,28 +12,20 @@ router.post('/', async (req, res) => {
   const { email, password, name } = req.body.formData || {};
 
   if (!email || !password || !name) {
-    logger.warn('Missing required fields in signup', {
-      hasEmail: !!email,
-      hasPassword: !!password,
-      hasName: !!name
-    });
     return res.status(400).json({ error: 'Email, password, and name are required' });
   }
 
   if (!isEmailValid(email)) {
-    logger.warn('Invalid email format', { email });
     return res.status(400).json({ error: 'Invalid email format' });
   }
 
   // Validate password strength (add your requirements)
   // if (password.length < 8) {
-  //   logger.warn('Password too weak', { email });
   //   return res.status(400).json({ error: 'Password must be at least 8 characters long' });
   // }
 
   // Validate name length
   if (name.trim().length < 2 || name.trim().length > 100) {
-    logger.warn('Invalid name length', { email, nameLength: name.length });
     return res.status(400).json({ error: 'Name must be between 2 and 100 characters' });
   }
 
@@ -44,15 +35,12 @@ router.post('/', async (req, res) => {
     const emailExists = await checkEmailExists(email);
 
     if (emailExists) {
-      logger.warn('Signup attempt with existing email', { email });
       return res.status(409).json({ error: 'Email already exists' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     client = await getTransactionClient();
-    logger.info('Started transaction for user signup', { email });
-
 
     const usersInsertQuery = `
       INSERT INTO users ("password_hash")
@@ -96,7 +84,6 @@ router.post('/', async (req, res) => {
     };
 
     const userResponse = sendAuthCookie(res, safeUserData);
-    logger.info('User created and authenticated', res);
 
     let redirectUrl;
     if (safeUserData.role === 'student') {
@@ -117,7 +104,6 @@ router.post('/', async (req, res) => {
 
   } catch (error) {
     queryDatabase('ROLLBACK')
-    logger.error('Error during user signup', { error: error.message, stack: error.stack });
     res.status(500).json({ error: 'Internal server error' });
   }
 });

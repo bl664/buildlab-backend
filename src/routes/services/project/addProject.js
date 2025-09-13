@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
-const logger = require('../../../utils/logger');
 const { createGitHubRepo } = require('../../../../src/api/github/createRepo/route');
 const { deleteGitHubRepo } = require('../../../../src/api/github/deleteRepo/route');
 const { queryDatabase, getTransactionClient } = require('../../../services/dbQuery');

@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
-const logger = require('../../../utils/logger');
 const { queryDatabase } = require('../../../services/dbQuery');
 const APP_CONFIG = require('../../../../config')
 router.use(authMiddleware);
@@ -38,7 +37,6 @@ router.get('/', async (req, res) => {
             activeProjects
         });
     } catch (error) {
-        logger.error('Error fetching active projects', { user_id, error });
         res.status(500).json({ error: 'Failed to fetch active projects' });
     }
 });

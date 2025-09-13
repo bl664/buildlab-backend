@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../../middleware/auth');
-const logger = require('../../../../utils/logger');
 const { queryDatabase } = require('../../../../services/dbQuery');
 const jwt = require('jsonwebtoken');
 
@@ -33,7 +32,6 @@ router.delete('/', async (req, res) => {
         });
     } catch (error) {
         console.error('Error deleting task:', error);
-        logger.warn('Invalid user', { id });
         res.status(500).json({ error: 'Internal server error' });
     }
 });

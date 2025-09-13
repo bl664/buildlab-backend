@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
-const logger = require('../../../utils/logger');
 const { queryDatabase } = require('../../../services/dbQuery');
 router.use(authMiddleware);
 
@@ -43,10 +42,6 @@ ON u.user_id = msg_users.other_user_id;
         });
         
     } catch (error) {
-        logger.error('Error fetching chat contacts', { 
-            user_id: req.user?.userId, 
-            error: error.message 
-        });
         res.status(500).json({ error: 'Failed to fetch chat contacts' });
     }
 });

@@ -2,7 +2,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
-const logger = require('../../../utils/logger');
 const { queryDatabase } = require('../../../services/dbQuery');
 const APP_CONFIG = require('../../../../config')
 router.use(authMiddleware);
@@ -62,7 +61,6 @@ console.log("fetched team by id is", result)
             result: result
         });
     } catch (error) {
-        logger.error('Failed to fetch team by ID', { error });
         return res.status(500).json({ error: 'Server error' });
     }
 });

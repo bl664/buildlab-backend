@@ -2,7 +2,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../../middleware/auth');
-const logger = require('../../../../utils/logger');
 const { queryDatabase } = require('../../../../services/dbQuery');
 router.use(authMiddleware);
 
@@ -47,7 +46,6 @@ ORDER BY c.created_at ASC;
             comments: commentResult
         })
     } catch (error) {
-        logger.warn('Invalid user', { id });
         res.status(401).json({ error: 'Invalid user' });
     }
 })

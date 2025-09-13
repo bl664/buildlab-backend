@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
-const logger = require('../../../utils/logger');
 const { queryDatabase } = require('../../../services/dbQuery');
 const APP_CONFIG = require('../../../../config');
 const jwt = require('jsonwebtoken');
@@ -173,7 +172,6 @@ router.put('/', async (req, res) => {
 
     } catch (error) {
         console.error('Error updating project:', error.message);
-        logger.warn('Invalid update attempt', { error: error.message });
         queryDatabase('ROLLBACK');
         return res.status(500).json({ error: error.message || 'Internal server error' });
     }
