@@ -1,0 +1,499 @@
+const { MigrationInterface, QueryRunner } = require("typeorm");
+
+module.exports = class Initial1730820810062 {
+    name = 'Initial1730820810062'
+
+    async up(queryRunner) {
+        await queryRunner.query(`
+            CREATE TYPE "public"."users_role_enum" AS ENUM('admin', 'member')
+        `);
+        await queryRunner.query(`
+            CREATE TABLE "users" (
+                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "name" character varying NOT NULL,
+                "email" character varying NOT NULL,
+                "passwordHash" character varying NOT NULL,
+                "role" "public"."users_role_enum" NOT NULL DEFAULT 'member',
+                "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
+                "updatedAt" TIMESTAMP NOT NULL DEFAULT now(),
+                CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"),
+                CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id")
+            )
+        `);
+        await queryRunner.query(`
+            CREATE TABLE "team" (
+                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "name" character varying NOT NULL,
+                "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
+                "updatedAt" TIMESTAMP NOT NULL DEFAULT now(),
+                CONSTRAINT "PK_f57d8293406df4af348402e4b74" PRIMARY KEY ("id")
+            )
+        `);
+        await queryRunner.query(`
+            CREATE TYPE "public"."tasks_status_enum" AS ENUM('pending', 'in_progress', 'completed')
+        `);
+        await queryRunner.query(`
+            CREATE TYPE "public"."tasks_priority_enum" AS ENUM('low', 'medium', 'high')
+        `);
+        await queryRunner.query(`
+            CREATE TABLE "tasks" (
+                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "title" character varying(255) NOT NULL,
+                "description" text,
+                "status" "public"."tasks_status_enum" NOT NULL DEFAULT 'pending',
+                "assigned_to" uuid NOT NULL,
+                "project_id" uuid NOT NULL,
+                "due_date" date NOT NULL,
+                "priority" "public"."tasks_priority_enum" NOT NULL DEFAULT 'low',
+                "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+                "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+                "projectId" uuid,
+                "userId" uuid,
+                CONSTRAINT "PK_8d12ff38fcc62aaba2cab748772" PRIMARY KEY ("id")
+            )
+        `);
+        await queryRunner.query(`
+            CREATE TABLE "student_projects" (
+                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "student_id" uuid NOT NULL,
+                "project_id" uuid NOT NULL,
+                "participation_start_date" date NOT NULL,
+                "participation_end_date" date,
+                "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
+                "updatedAt" TIMESTAMP NOT NULL DEFAULT now(),
+                CONSTRAINT "PK_69a4a7f7cdd1a21f1248179e92a" PRIMARY KEY ("id")
+            )
+        `);
+        await queryRunner.query(`
+            CREATE UNIQUE INDEX "IDX_student_project_unique" ON "student_projects" ("student_id", "project_id")
+        `);
+        await queryRunner.query(`
+            CREATE TYPE "public"."settings_theme_preference_enum" AS ENUM('light', 'dark')
+        `);
+        await queryRunner.query(`
+            CREATE TABLE "settings" (
+                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "user_id" uuid NOT NULL,
+                "notifications_enabled" boolean NOT NULL DEFAULT true,
+                "theme_preference" "public"."settings_theme_preference_enum" NOT NULL DEFAULT 'dark',
+                "language" character varying(10) NOT NULL DEFAULT 'en',
+                "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+                "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+                CONSTRAINT "REL_a2883eaa72b3b2e8c98e744609" UNIQUE ("user_id"),
+                CONSTRAINT "PK_0669fe20e252eb692bf4d344975" PRIMARY KEY ("id")
+            )
+        `);
+        await queryRunner.query(`
+            CREATE TYPE "public"."projects_status_enum" AS ENUM('active', 'completed', 'on_hold')
+        `);
+        await queryRunner.query(`
+            CREATE TABLE "projects" (
+                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "name" character varying NOT NULL,
+                "description" text NOT NULL,
+                "status" "public"."projects_status_enum" NOT NULL DEFAULT 'active',
+                "start_date" date NOT NULL,
+                "end_date" date NOT NULL,
+                "created_by_id" uuid NOT NULL,
+                "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
+                "updatedAt" TIMESTAMP NOT NULL DEFAULT now(),
+                CONSTRAINT "UQ_6b35e73e223225aa97d84eaa66f" UNIQUE ("description"),
+                CONSTRAINT "PK_6271df0a7aed1d6c0691ce6ac50" PRIMARY KEY ("id")
+            )
+        `);
+        await queryRunner.query(`
+            CREATE TYPE "public"."project_teams_role_in_project_enum" AS ENUM('development', 'design', 'qa')
+        `);
+        await queryRunner.query(`
+            CREATE TABLE "project_teams" (
+                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "project_id" uuid NOT NULL,
+                "team_id" uuid NOT NULL,
+                "role_in_project" "public"."project_teams_role_in_project_enum" NOT NULL,
+                "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+                "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+                CONSTRAINT "PK_01a9679008fec32d42fe331ff10" PRIMARY KEY ("id")
+            )
+        `);
+        await queryRunner.query(`
+            CREATE TABLE "progress_tracking" (
+                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "project_id" uuid NOT NULL,
+                "milestone" character varying(255) NOT NULL,
+                "progress_percentage" double precision NOT NULL,
+                "due_date" TIMESTAMP,
+                "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+                CONSTRAINT "PK_7896c8854b95be1c2db02c8b75f" PRIMARY KEY ("id")
+            )
+        `);
+        await queryRunner.query(`
+            CREATE TYPE "public"."notifications_status_enum" AS ENUM('unread', 'read')
+        `);
+        await queryRunner.query(`
+            CREATE TABLE "notifications" (
+                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "user_id" uuid NOT NULL,
+                "message" text NOT NULL,
+                "status" "public"."notifications_status_enum" NOT NULL DEFAULT 'unread',
+                "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+                CONSTRAINT "PK_6a72c3c0f683f6462415e653c3a" PRIMARY KEY ("id")
+            )
+        `);
+        await queryRunner.query(`
+            CREATE TABLE "messages" (
+                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "sender_id" uuid NOT NULL,
+                "receiver_id" uuid NOT NULL,
+                "content" text NOT NULL,
+                "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+                CONSTRAINT "PK_18325f38ae6de43878487eff986" PRIMARY KEY ("id")
+            )
+        `);
+        await queryRunner.query(`
+            CREATE TABLE "activity_feed" (
+                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "user_id" uuid NOT NULL,
+                "project_id" uuid NOT NULL,
+                "action" character varying(255) NOT NULL,
+                "timestamp" TIMESTAMP NOT NULL DEFAULT now(),
+                CONSTRAINT "PK_b772f66cacd352e98fba04a7b8a" PRIMARY KEY ("id")
+            )
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP CONSTRAINT "PK_69a4a7f7cdd1a21f1248179e92a"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP COLUMN "id"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP COLUMN "participation_start_date"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP COLUMN "participation_end_date"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP COLUMN "createdAt"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP COLUMN "updatedAt"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD "id" uuid NOT NULL DEFAULT uuid_generate_v4()
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD CONSTRAINT "PK_69a4a7f7cdd1a21f1248179e92a" PRIMARY KEY ("id")
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD "participation_start_date" date NOT NULL
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD "participation_end_date" date
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD "createdAt" TIMESTAMP NOT NULL DEFAULT now()
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD "updatedAt" TIMESTAMP NOT NULL DEFAULT now()
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP CONSTRAINT "PK_69a4a7f7cdd1a21f1248179e92a"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD CONSTRAINT "PK_2fb5c33c8fe6428e04fc00f6377" PRIMARY KEY ("student_id", "project_id")
+        `);
+        await queryRunner.query(`
+            DROP INDEX "public"."IDX_student_project_unique"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP CONSTRAINT "PK_8f18f875c8d1c83f06fa198016c"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD CONSTRAINT "PK_489dd6faac20e7e29b815e57a05" PRIMARY KEY ("project_id", "id")
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP CONSTRAINT "PK_489dd6faac20e7e29b815e57a05"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD CONSTRAINT "PK_69a4a7f7cdd1a21f1248179e92a" PRIMARY KEY ("id")
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP CONSTRAINT "PK_69a4a7f7cdd1a21f1248179e92a"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD CONSTRAINT "PK_700533d46e463417d9f12c3e8a2" PRIMARY KEY ("id", "student_id")
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP CONSTRAINT "PK_700533d46e463417d9f12c3e8a2"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD CONSTRAINT "PK_8f18f875c8d1c83f06fa198016c" PRIMARY KEY ("student_id", "id", "project_id")
+        `);
+        await queryRunner.query(`
+            CREATE UNIQUE INDEX "IDX_student_project_unique" ON "student_projects" ("student_id", "project_id")
+        `);
+        await queryRunner.query(`
+            CREATE INDEX "IDX_2f5b0be049c8659345bf152af3" ON "student_projects" ("student_id")
+        `);
+        await queryRunner.query(`
+            CREATE INDEX "IDX_f037094b86adb593f0b661042a" ON "student_projects" ("project_id")
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "tasks"
+            ADD CONSTRAINT "FK_e08fca67ca8966e6b9914bf2956" FOREIGN KEY ("projectId") REFERENCES "projects"("id") ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "tasks"
+            ADD CONSTRAINT "FK_166bd96559cb38595d392f75a35" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD CONSTRAINT "FK_2f5b0be049c8659345bf152af37" FOREIGN KEY ("student_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD CONSTRAINT "FK_f037094b86adb593f0b661042a8" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "settings"
+            ADD CONSTRAINT "FK_a2883eaa72b3b2e8c98e7446098" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "projects"
+            ADD CONSTRAINT "FK_c24760a4c22a838d6a8eb1fdc3a" FOREIGN KEY ("created_by_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "project_teams"
+            ADD CONSTRAINT "FK_8e02f911192897094a081e6823b" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "project_teams"
+            ADD CONSTRAINT "FK_c448616f12038bffafbeea68285" FOREIGN KEY ("team_id") REFERENCES "team"("id") ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "progress_tracking"
+            ADD CONSTRAINT "FK_91ad690e8928db880e391f1a51c" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "notifications"
+            ADD CONSTRAINT "FK_9a8a82462cab47c73d25f49261f" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "messages"
+            ADD CONSTRAINT "FK_22133395bd13b970ccd0c34ab22" FOREIGN KEY ("sender_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "messages"
+            ADD CONSTRAINT "FK_b561864743d235f44e70addc1f5" FOREIGN KEY ("receiver_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "activity_feed"
+            ADD CONSTRAINT "FK_f6089b02d0a90d30b864ef8dfce" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "activity_feed"
+            ADD CONSTRAINT "FK_3eb5a81d293b63dacb6d4b81a4c" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+    }
+
+    async down(queryRunner) {
+        await queryRunner.query(`
+            ALTER TABLE "activity_feed" DROP CONSTRAINT "FK_3eb5a81d293b63dacb6d4b81a4c"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "activity_feed" DROP CONSTRAINT "FK_f6089b02d0a90d30b864ef8dfce"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "messages" DROP CONSTRAINT "FK_b561864743d235f44e70addc1f5"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "messages" DROP CONSTRAINT "FK_22133395bd13b970ccd0c34ab22"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "notifications" DROP CONSTRAINT "FK_9a8a82462cab47c73d25f49261f"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "progress_tracking" DROP CONSTRAINT "FK_91ad690e8928db880e391f1a51c"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "project_teams" DROP CONSTRAINT "FK_c448616f12038bffafbeea68285"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "project_teams" DROP CONSTRAINT "FK_8e02f911192897094a081e6823b"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "projects" DROP CONSTRAINT "FK_c24760a4c22a838d6a8eb1fdc3a"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "settings" DROP CONSTRAINT "FK_a2883eaa72b3b2e8c98e7446098"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP CONSTRAINT "FK_f037094b86adb593f0b661042a8"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP CONSTRAINT "FK_2f5b0be049c8659345bf152af37"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "tasks" DROP CONSTRAINT "FK_166bd96559cb38595d392f75a35"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "tasks" DROP CONSTRAINT "FK_e08fca67ca8966e6b9914bf2956"
+        `);
+        await queryRunner.query(`
+            DROP INDEX "public"."IDX_f037094b86adb593f0b661042a"
+        `);
+        await queryRunner.query(`
+            DROP INDEX "public"."IDX_2f5b0be049c8659345bf152af3"
+        `);
+        await queryRunner.query(`
+            DROP INDEX "public"."IDX_student_project_unique"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP CONSTRAINT "PK_8f18f875c8d1c83f06fa198016c"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD CONSTRAINT "PK_700533d46e463417d9f12c3e8a2" PRIMARY KEY ("student_id", "id")
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP CONSTRAINT "PK_700533d46e463417d9f12c3e8a2"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD CONSTRAINT "PK_69a4a7f7cdd1a21f1248179e92a" PRIMARY KEY ("id")
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP CONSTRAINT "PK_69a4a7f7cdd1a21f1248179e92a"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD CONSTRAINT "PK_489dd6faac20e7e29b815e57a05" PRIMARY KEY ("project_id", "id")
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP CONSTRAINT "PK_489dd6faac20e7e29b815e57a05"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD CONSTRAINT "PK_8f18f875c8d1c83f06fa198016c" PRIMARY KEY ("student_id", "project_id", "id")
+        `);
+        await queryRunner.query(`
+            CREATE UNIQUE INDEX "IDX_student_project_unique" ON "student_projects" ("student_id", "project_id")
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP CONSTRAINT "PK_2fb5c33c8fe6428e04fc00f6377"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD CONSTRAINT "PK_69a4a7f7cdd1a21f1248179e92a" PRIMARY KEY ("id")
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP COLUMN "updatedAt"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP COLUMN "createdAt"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP COLUMN "participation_end_date"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP COLUMN "participation_start_date"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP CONSTRAINT "PK_69a4a7f7cdd1a21f1248179e92a"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects" DROP COLUMN "id"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD "updatedAt" TIMESTAMP NOT NULL DEFAULT now()
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD "createdAt" TIMESTAMP NOT NULL DEFAULT now()
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD "participation_end_date" date
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD "participation_start_date" date NOT NULL
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD "id" uuid NOT NULL DEFAULT uuid_generate_v4()
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "student_projects"
+            ADD CONSTRAINT "PK_69a4a7f7cdd1a21f1248179e92a" PRIMARY KEY ("id")
+        `);
+        await queryRunner.query(`
+            DROP TABLE "activity_feed"
+        `);
+        await queryRunner.query(`
+            DROP TABLE "messages"
+        `);
+        await queryRunner.query(`
+            DROP TABLE "notifications"
+        `);
+        await queryRunner.query(`
+            DROP TYPE "public"."notifications_status_enum"
+        `);
+        await queryRunner.query(`
+            DROP TABLE "progress_tracking"
+        `);
+        await queryRunner.query(`
+            DROP TABLE "project_teams"
+        `);
+        await queryRunner.query(`
+            DROP TYPE "public"."project_teams_role_in_project_enum"
+        `);
+        await queryRunner.query(`
+            DROP TABLE "projects"
+        `);
+        await queryRunner.query(`
+            DROP TYPE "public"."projects_status_enum"
+        `);
+        await queryRunner.query(`
+            DROP TABLE "settings"
+        `);
+        await queryRunner.query(`
+            DROP TYPE "public"."settings_theme_preference_enum"
+        `);
+        await queryRunner.query(`
+            DROP INDEX "public"."IDX_student_project_unique"
+        `);
+        await queryRunner.query(`
+            DROP TABLE "student_projects"
+        `);
+        await queryRunner.query(`
+            DROP TABLE "tasks"
+        `);
+        await queryRunner.query(`
+            DROP TYPE "public"."tasks_priority_enum"
+        `);
+        await queryRunner.query(`
+            DROP TYPE "public"."tasks_status_enum"
+        `);
+        await queryRunner.query(`
+            DROP TABLE "team"
+        `);
+        await queryRunner.query(`
+            DROP TABLE "users"
+        `);
+        await queryRunner.query(`
+            DROP TYPE "public"."users_role_enum"
+        `);
+    }
+}
