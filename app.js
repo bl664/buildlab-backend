@@ -7,7 +7,7 @@ const authRoutes = require('./src/routes');
 const corsMiddleware = require('./src/./middleware/cors');
 const initializeSocket = require('./src/routes/messages/socket'); // Import Socket.IO setup
 const app = express();
-const PORT = APP_CONFIG.SERVER_PORT;
+const PORT = APP_CONFIG.SERVER_PORT || 5001;
 
 const server = http.createServer(app);
 
