@@ -9,6 +9,7 @@ const APP_CONFIG = require('../../../config');
 const router = express.Router();
 
 router.post('/', async (req, res) => {
+  console.log('Signup request body:', req.body);
   const { email, password, name } = req.body.formData || {};
 
   if (!email || !password || !name) {

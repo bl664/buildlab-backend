@@ -67,13 +67,14 @@ console.log("signin user is ", user)
     };
 
     const userResponse = sendAuthCookie(res, safeUserData);
-    
+    console.log('User authenticated successfully', { userId: user.id, email: user.email }); 
     // decide redirect based on role
     let redirectUrl;
     if (safeUserData.role === 'student') {
       console.log("yes student",safeUserData.role , APP_CONFIG.STUDENT_REDIRECT_URL_SUCCESS)
       redirectUrl = APP_CONFIG.STUDENT_REDIRECT_URL_SUCCESS;
     } else if (safeUserData.role === 'mentor') {
+      console.log("yes mentor",safeUserData.role , APP_CONFIG.MENTOR_REDIRECT_URL_SUCCESS)  
       redirectUrl = APP_CONFIG.MENTOR_REDIRECT_URL_SUCCESS;
     } else {
       redirectUrl = APP_CONFIG.DEFAULT_REDIRECT_URL || '/';
