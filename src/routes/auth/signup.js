@@ -64,7 +64,7 @@ router.post('/', async (req, res) => {
     RETURNING id;
     `;
 
-    const messageValues = [user.id, name, email, 'mentor']
+    const messageValues = [user.id, name, email, 'student']
 
     const messageResult = await queryDatabase(messageQuery, messageValues, client)
 
@@ -80,7 +80,7 @@ router.post('/', async (req, res) => {
       id: user.id,
       email,            // from req.body
       name: name.trim(),// from req.body
-      role: 'mentor',   // hardcoded in your insert above
+      role: 'student',   // hardcoded in your insert above
       created_at: user.created_at
     };
 
