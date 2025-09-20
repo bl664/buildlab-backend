@@ -12,10 +12,10 @@ const sendAuthCookie = (res, user) => {
   const token = generateToken(tokenPayload);
 // console.log("genratd token: ",APP_CONFIG.BL_AUTH_COOKIE_NAME, token)
 res.cookie(APP_CONFIG.BL_AUTH_COOKIE_NAME, token, {
-  httpOnly: APP_CONFIG.BL_AUTH_COOKIE_HTTP_ONLY,
-  secure: APP_CONFIG.BL_AUTH_COOKIE_SECURE === 'true',
-  sameSite: 'Lax', // Explicitly set to None for testing
-  // domain: APP_CONFIG.BL_AUTH_COOKIE_ALLOWED_DOMAIN,
+  httpOnly: true,
+  secure: true,
+  sameSite: 'none', // Explicitly set to None for testing
+  domain: '.thebuildlab.app/',
   maxAge: APP_CONFIG.BL_AUTH_COOKIE_MAXAGE,
   path: '/'
 });
@@ -31,10 +31,10 @@ res.cookie(APP_CONFIG.BL_AUTH_COOKIE_NAME, token, {
 // Function to clear authentication cookie
 const clearAuthCookie = (res) => {
   res.clearCookie(APP_CONFIG.BL_AUTH_COOKIE_NAME, {
-    httpOnly: APP_CONFIG.BL_AUTH_COOKIE_HTTP_ONLY,
-    secure: APP_CONFIG.BL_AUTH_COOKIE_SECURE === 'true',
-    sameSite: APP_CONFIG.BL_AUTH_COOKIE_SAME_SITE,
-    domain: APP_CONFIG.BL_AUTH_COOKIE_ALLOWED_DOMAIN,
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    domain: '.thebuildlab.app/',
     path: '/'
   });
 
@@ -46,3 +46,12 @@ module.exports = {
   sendAuthCookie,
   clearAuthCookie
 };
+
+// res.cookie(APP_CONFIG.BL_AUTH_COOKIE_NAME, token, {
+//   httpOnly: APP_CONFIG.BL_AUTH_COOKIE_HTTP_ONLY,
+//   secure: APP_CONFIG.BL_AUTH_COOKIE_SECURE === 'true',
+//   sameSite: 'none',
+//   domain: APP_CONFIG.BL_AUTH_COOKIE_ALLOWED_DOMAIN,
+//   maxAge: APP_CONFIG.BL_AUTH_COOKIE_MAXAGE,
+//   path: '/'
+// });

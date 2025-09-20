@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "node app.js",
+    "server": "nodemon app.js",
     "migrate:run": "node scripts/migrate.js run",
     "migrate:revert": "node scripts/migrate.js revert",
     "migrate:status": "node scripts/migrate.js status",
