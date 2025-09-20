@@ -15,7 +15,7 @@ res.cookie(APP_CONFIG.BL_AUTH_COOKIE_NAME, token, {
   httpOnly: true,
   secure: true,
   sameSite: 'none', // Explicitly set to None for testing
-  domain: '.thebuildlab.app/',
+  domain: '.thebuildlab.app',
   maxAge: APP_CONFIG.BL_AUTH_COOKIE_MAXAGE,
   path: '/'
 });
