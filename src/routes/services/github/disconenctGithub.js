@@ -24,13 +24,8 @@ console.log("user id is ", userId)
             [userId]
         );
 
-        if (result.length === 0) {
-            console.log(`GitHub not connected for user ID: ${userId}`);
-            return res.status(400).json({ message: 'GitHub not connected' });
-        }
-
-        console.log(`GitHub connection found for user ID: ${userId}`);
-        return res.status(200).json(result[0]);
+        console.log(`GitHub connection found for user ID: ${userId} and successfully deleted`);
+        return res.status(200);
     } catch (error) {
        console.log('Error fetching GitHub user info:', error);
         return res.status(500).json({ error: 'Internal server error' });

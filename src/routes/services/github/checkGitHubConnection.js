@@ -6,7 +6,7 @@ const { queryDatabase } = require('../../../services/dbQuery');
 router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
-    console.log("getting github user")
+    console.log("getting github user from DB")
     try {
         const userId = req.user?.userId;
 console.log("userId ", userId)
