@@ -3,11 +3,11 @@ const APP_CONFIG = require('../../config');
 
 const setAuthCookies = (res, accessToken, refreshToken) => {
   const baseOptions = {
-    httpOnly: APP_CONFIG.BL_AUTH_COOKIE_HTTP_ONLY,
-    secure:  APP_CONFIG.BL_AUTH_COOKIE_SECURE === 'true',
+    httpOnly: APP_CONFIG.BL_AUTH_COOKIE_HTTP_ONLY, //true
+    secure:  true,
     sameSite: 'none',
-    domain: APP_CONFIG.BL_AUTH_COOKIE_ALLOWED_DOMAIN,
-    maxAge: APP_CONFIG.BL_AUTH_COOKIE_MAXAGE,
+    domain: APP_CONFIG.BL_AUTH_COOKIE_ALLOWED_DOMAIN,  // .thebuildlab.app
+    maxAge: APP_CONFIG.BL_AUTH_COOKIE_MAXAGE, // 86400000
     path: '/',
   };
 
