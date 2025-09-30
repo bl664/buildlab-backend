@@ -1,22 +1,30 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase } = require('../../../services/dbQuery');
-router.use(authMiddleware);     
+const xss = require("xss"); 
 
 router.post('/', async (req, res) => {
     console.log("Creating daily task");
-
-    let newReq = JSON.stringify(req.user, null, 2);
-    console.log("req is", newReq);
-
-    newReq = JSON.parse(newReq);
-    const user_id = newReq.userId;
-
+    const user_id = req.user.id
     console.log("req.body is", req.body);
+
+    if(!user_id) {
+        console.log("Your session has expired. Please Login again.")
+        res.status(401).json({ error: 'Your session has expired. Please Login again.' });
+    }
+
     try {
         const { title, status } = req.body;
-console.log("title is", title, status);
+
+        if (typeof title !== "string" || title.trim().length === 0) {
+            return res.status(400).json({ error: "Invalid title" });
+        }
+        if (!["pending", "completed", "in_progress"].includes(status)) {
+            return res.status(400).json({ error: "Invalid status" });
+        }
+
+        title = xss(title.trim());
+
         const query = `
             INSERT INTO daily_tasks (title, status, user_id)
             VALUES ($1, $2, $3) RETURNING id, title, status, created_at;
@@ -24,7 +32,11 @@ console.log("title is", title, status);
         const values = [title, status, user_id];
 
         const taskResult = await queryDatabase(query, values);
-        const taskId = taskResult[0].id;      
+
+         if (!taskResult || taskResult.length === 0) {
+            return res.status(500).json({ error: "Task creation failed" });
+        }
+        
         const task = taskResult[0]
 
         res.status(201).json({ message: 'Daily task created successfully', task });

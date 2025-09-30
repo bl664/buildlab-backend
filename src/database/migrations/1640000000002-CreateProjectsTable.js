@@ -4,7 +4,7 @@ class CreateProjectsTable1640000000002 {
     async up(queryRunner) {
         await queryRunner.query(`
             CREATE TABLE "projects" (
-                "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+                "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
                 "name" varchar UNIQUE NOT NULL DEFAULT '',
                 "description" text NOT NULL DEFAULT '',
                 "status" project_status_enum NOT NULL DEFAULT 'pending',
@@ -77,7 +77,7 @@ module.exports = CreateProjectsTable1640000000002;
 //                         type: "uuid",
 //                         isPrimary: true,
 //                         generationStrategy: "uuid",
-//                         default: "uuid_generate_v4()"
+//                         default: "gen_random_uuid()"
 //                     },
 //                     {
 //                         name: "name",

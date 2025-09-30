@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../../../middleware/auth');
 const { createGitHubRepo } = require('../../../../src/api/github/createRepo/route');
 const { deleteGitHubRepo } = require('../../../../src/api/github/deleteRepo/route');
 const { queryDatabase, getTransactionClient } = require('../../../services/dbQuery');
@@ -8,10 +7,15 @@ const { checkProjectExistence } = require('./projectExistannce');
 const { checkRepoExists } = require('../../../../src/api/github/createRepo/checkRepoExists');
 const { sendAndStoreNotification } = require('../../../utils/notificationService');
 
-router.use(authMiddleware);
 
 router.post('/', async (req, res) => {
-    const user_id = req.user.userId;
+    const user_id = req.user.id;
+    console.log("proect req.user_id", user_id)
+
+    if (!user_id) {
+        return res.status(401).json({ error: 'Unauthorized. Please log in again.' });
+    }
+
     let client = null;
     let repoCreated = false;
     let repoName = null;
@@ -27,7 +31,7 @@ router.post('/', async (req, res) => {
 
         // Validate required fields
         if (!name || !description || !status || !end_date) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 error: 'Missing required project fields',
                 details: 'Name, description, status, and end_date are required'
             });
@@ -35,7 +39,7 @@ router.post('/', async (req, res) => {
 
         // Validate team members array
         if (!teamMembers || !Array.isArray(teamMembers) || teamMembers.length === 0) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 error: 'Team members are required',
                 details: 'At least one team member must be specified'
             });
@@ -47,22 +51,22 @@ router.post('/', async (req, res) => {
         const projectCheck = await checkProjectExistence(name, user_id);
         if (projectCheck.exists) {
             console.log('Project already exists');
-            return res.status(409).json({ 
+            return res.status(409).json({
                 error: 'Project already exists',
-                details: projectCheck.message 
+                details: projectCheck.message
             });
         }
         console.log("project does not exist, proceeding with creation");
 
         // Step 2: Get GitHub token
         const tokenResult = await queryDatabase(
-            'SELECT github_token, github_user_name FROM github_users WHERE user_id = $1', 
+            'SELECT github_token, github_user_name FROM github_users WHERE user_id = $1',
             [user_id]
         );
 
         if (!tokenResult || tokenResult.length === 0) {
             console.log('GitHub account not connected');
-            return res.status(400).json({ 
+            return res.status(400).json({
                 error: 'GitHub account not Linked. Please connect your GitHub account first.',
                 details: 'Please connect your GitHub account first'
             });
@@ -71,7 +75,7 @@ router.post('/', async (req, res) => {
         const { github_token, github_user_name } = tokenResult[0];
 
         if (!github_token) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 error: 'GitHub token not found',
                 details: 'Please reconnect your GitHub account'
             });
@@ -81,22 +85,22 @@ router.post('/', async (req, res) => {
         const repoCheck = await checkRepoExists(github_user_name, name, github_token);
         if (repoCheck) {
             console.log('GitHub repository already exists');
-            return res.status(409).json({ 
+            return res.status(409).json({
                 error: 'GitHub repository already exists',
                 details: `Repository '${name}' already exists in your GitHub account`
             });
         }
 
-        console.log('All validations passed. Creating GitHub repository...');
+        console.log('All validations passed. Creating GitHub repository...', name, description, github_token);
 
         // Step 4: Create GitHub repository
         const repoResponse = await createGitHubRepo(name, description, github_token);
-        
+
         // Check if the response is ok
         if (!repoResponse.ok) {
             const errorData = await repoResponse.json();
             console.error('GitHub repository creation failed:', errorData);
-            
+
             return res.status(repoResponse.status).json({
                 error: 'Failed to create GitHub repository',
                 details: errorData.error || errorData.message || 'Unknown GitHub API error',
@@ -107,7 +111,7 @@ router.post('/', async (req, res) => {
         const repoData = await repoResponse.json();
         repoCreated = true;
         repoName = repoData.repoName;
-        
+
         console.log('GitHub repository created successfully:', repoData.repoUrl);
 
         // Step 5: Start database transaction
@@ -123,13 +127,13 @@ router.post('/', async (req, res) => {
             `;
 
             const projectValues = [
-                name, description, status, start_date, end_date, 
-                user_id, user_id, techStack, skillsRequired, 
+                name, description, status, start_date, end_date,
+                user_id, user_id, techStack, skillsRequired,
                 repoData.repoUrl, repoData.repoName
             ];
-            
+
             const projectResult = await queryDatabase(projectQuery, projectValues, client);
-            
+
             if (!projectResult || projectResult.length === 0) {
                 throw new Error('Failed to create project in database');
             }
@@ -157,11 +161,11 @@ router.post('/', async (req, res) => {
                     client  // ← This is also the key fix!
                 );
             });
-            
+
             await Promise.all(studentInsertPromises);
             console.log('Student-project relations created');
 
-            if(user === 'student') {
+            if (user === 'student') {
                 console.log("sending notification as a student to mentor ", mentorId)
                 const mentor_id = mentorId;
                 await sendAndStoreNotification(io, mentor_id, {
@@ -171,22 +175,19 @@ router.post('/', async (req, res) => {
                     url: `/projects/${projectId}`
                 });
             }
-            else if(user === 'mentor') {
+            else if (user === 'mentor') {
                 console.log("sending notification as a mentor to students ")
-              const sendNotification = teamMembers.map(async (student) => {
-                const studentId = student.id || student;
-                await sendAndStoreNotification(io, studentId, {
-                    type: 'New Project Created',
-                    content: `Project ${name} has been Created and assigned to you.`,
-                    createdBy: mentorId,
-                    url: `/projects/${projectId}`
-                });
-            })  
+                const sendNotification = teamMembers.map(async (student) => {
+                    const studentId = student.id || student;
+                    await sendAndStoreNotification(io, studentId, {
+                        type: 'New Project Created',
+                        content: `Project ${name} has been Created and assigned to you.`,
+                        createdBy: mentorId,
+                        url: `/projects/${projectId}`
+                    });
+                })
             }
-            
-            
-            
-            
+
             // Commit transaction
             await client.query('COMMIT');
             console.log('Transaction committed successfully');
@@ -206,7 +207,25 @@ router.post('/', async (req, res) => {
             // Rollback database transaction
             await client.query('ROLLBACK');
             console.error('Database error, transaction rolled back:', dbError);
-            throw dbError; // Re-throw to trigger cleanup
+            if (dbError.code === '23505') { // PostgreSQL unique constraint violation
+                if (dbError.constraint === 'projects_name_key') {
+                    throw new Error(`DUPLICATE_PROJECT_NAME: A project with the name '${name}' already exists. Please choose a different name.`);
+                } else {
+                    throw new Error(`DUPLICATE_ENTRY: This ${dbError.constraint} already exists.`);
+                }
+            }
+
+            // Handle foreign key constraint violations
+            if (dbError.code === '23503') { // PostgreSQL foreign key violation
+                throw new Error('INVALID_REFERENCE: One or more referenced records do not exist.');
+            }
+
+            // Handle other database errors
+            if (dbError.code) {
+                throw new Error(`DATABASE_ERROR: ${dbError.message}`);
+            }
+
+            throw dbError; // Re-throw if not handled above
         } finally {
             // Always release the client
             if (client) {
@@ -216,16 +235,15 @@ router.post('/', async (req, res) => {
 
     } catch (error) {
         console.error('Error in project creation:', error);
-
         // Cleanup: Delete GitHub repo if it was created but database failed
         if (repoCreated && repoName) {
             try {
                 console.log('Attempting to cleanup GitHub repository...');
                 const tokenResult = await queryDatabase(
-                    'SELECT github_token, github_user_name FROM github_users WHERE user_id = $1', 
+                    'SELECT github_token, github_user_name FROM github_users WHERE user_id = $1',
                     [user_id]
                 );
-                
+
                 if (tokenResult && tokenResult.length > 0) {
                     const { github_token, github_user_name } = tokenResult[0];
                     if (github_token) {
@@ -238,13 +256,28 @@ router.post('/', async (req, res) => {
                 // Don't throw cleanup error, just log it
             }
         }
-
         // Determine error status and message
         let statusCode = 500;
         let errorMessage = 'Internal server error';
         let errorDetails = error.message;
 
-        if (error.message.includes('GitHub')) {
+        if (error.message.includes('DUPLICATE_PROJECT_NAME:')) {
+            statusCode = 409;
+            errorMessage = 'Project name already exists';
+            errorDetails = error.message.replace('DUPLICATE_PROJECT_NAME: ', '');
+        } else if (error.message.includes('DUPLICATE_ENTRY:')) {
+            statusCode = 409;
+            errorMessage = 'Duplicate entry';
+            errorDetails = error.message.replace('DUPLICATE_ENTRY: ', '');
+        } else if (error.message.includes('INVALID_REFERENCE:')) {
+            statusCode = 400;
+            errorMessage = 'Invalid reference';
+            errorDetails = error.message.replace('INVALID_REFERENCE: ', '');
+        } else if (error.message.includes('DATABASE_ERROR:')) {
+            statusCode = 500;
+            errorMessage = 'Database error';
+            errorDetails = error.message.replace('DATABASE_ERROR: ', '');
+        } else if (error.message.includes('GitHub')) {
             statusCode = 502;
             errorMessage = 'GitHub service error';
         } else if (error.message.includes('database')) {

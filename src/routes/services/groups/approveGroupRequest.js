@@ -5,10 +5,10 @@ const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase } = require('../../../services/dbQuery');
 const { sendAndStoreNotification } = require('../../../utils/notificationService');
 
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 router.post('/', async (req, res) => {
-    const mentor_id = req.user?.userId;
+    const mentor_id = req.user.id;
     const io = req.app.get('io');
     const { request_id } = req.body;
 

@@ -3,11 +3,11 @@ const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase, getTransactionClient } = require('../../../services/dbQuery');
 
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
-  const userId = req.user?.userId;
+  const userId = req.user.id;
 console.log("deleting meeting", id)
   if (!id) {
     return res.status(400).json({

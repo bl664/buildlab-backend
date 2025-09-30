@@ -3,16 +3,16 @@ const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase } = require('../../../services/dbQuery');
 console.log("deleting...")
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 router.delete('/', async (req, res) => {
     console.log("deleting github user")
     try {
-        let newReq = JSON.stringify(req.user, null, 2);
-        console.log("req is", newReq);
+           
+          
 
-        newReq = JSON.parse(newReq);
-        const userId = newReq.userId;
+         
+        const userId = req.user.id
 console.log("user id is ", userId)
         if (!userId) {
            console.log('User ID is missing in the request');

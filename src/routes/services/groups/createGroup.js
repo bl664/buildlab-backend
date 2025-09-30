@@ -7,11 +7,11 @@ const {
     commitTransaction,
     rollbackTransaction
 } = require('../../../services/dbQuery');
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 router.post('/', async (req, res) => {
     console.log("yes create group")
-    const mentor_id = req.user.userId;
+    const mentor_id = req.user.id;
     console.log("mentorid", mentor_id)
 
     const client = await getTransactionClient();

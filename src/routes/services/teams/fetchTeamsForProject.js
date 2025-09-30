@@ -4,14 +4,14 @@ const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase } = require('../../../services/dbQuery');
 const APP_CONFIG = require('../../../../config')
-router.use(authMiddleware);
+//router.use(authMiddleware);
 const jwt = require('jsonwebtoken');
 
 router.get('/', async (req, res) => {
     console.log("yes getting Teams for student")
-    let newReq = JSON.stringify(req.user, null, 2);
-    newReq = JSON.parse(newReq);
-    const student_id = newReq.userId;
+       
+     
+    const student_id = req.user.id
     console.log("student_id", student_id)
     try {
         const query = `

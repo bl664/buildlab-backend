@@ -1,21 +1,21 @@
 
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../../../middleware/auth');
-const { queryDatabase } = require('../../../services/dbQuery');
-const APP_CONFIG = require('../../../../config')
-router.use(authMiddleware);
-const jwt = require('jsonwebtoken');
+const { queryDatabase, getTransactionClient } = require('../../../services/dbQuery');
 
 router.get('/', async (req, res) => {
-    console.log("yes getProjectByID")
-    const decoded = jwt.verify(req.cookies.bl_auth, APP_CONFIG.BL_AUTH_SECRET_KEY);
-    const { id } = req.query;
-    let user_id = decoded.userId
-    console.log("mentor", user_id, id)
-     
-    try {
-        const query = `
+  console.log("yes getProjectByID")
+  const { id } = req.query;
+
+  if (!id) {
+    return res.status(400).json({ error: 'Invalid ID.Unable to find project' });
+  }
+  let client;
+  try {
+    client = await getTransactionClient();
+;
+
+    const query = `
         SELECT 
   p.id, 
   p.name, 
@@ -62,18 +62,23 @@ GROUP BY
   mu_mentor.name;
 
         `;
-        const values = [id];
+    const values = [id];
 
-        const result = await queryDatabase(query, values);
-        const project = result;
-console.log("project by id is ", project)
-        return res.json({
-            message: 'fetched',
-            project: project
-        })
-    } catch(error) {
-        res.status(401).json({ error: 'Invalid user' });
-    }
+    const result = await queryDatabase(query, values, client);
+    await client.query('COMMIT');
+
+    const project = result;
+    return res.json({
+      message: 'fetched',
+      project: project
+    })
+  } catch (error) {
+    if (client) await client.query('ROLLBACK');
+    console.error('Error fetching project:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    if (client) client.release();
+  }
 })
 
 module.exports = router

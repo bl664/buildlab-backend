@@ -4,15 +4,13 @@ const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase, getTransactionClient } = require('../../../services/dbQuery');
 const { sendAndStoreNotification } = require('../../../utils/notificationService');
 
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 router.post('/', async (req, res) => {
   console.log("Creating task...");
 
-  const user = JSON.parse(JSON.stringify(req.user));
-  const user_id = user.userId;
+  const user_id = req.user.id
   const io = req.app.get('io');
-
 
   const {
     title,

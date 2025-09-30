@@ -4,7 +4,7 @@ const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase } = require('../../../services/dbQuery');
 const APP_CONFIG = require('../../../../config')
-router.use(authMiddleware);
+//router.use(authMiddleware);
 const jwt = require('jsonwebtoken');
 
 router.get('/', async (req, res) => {

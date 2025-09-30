@@ -1,20 +1,44 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../../../../middleware/auth');
-const { queryDatabase } = require('../../../../services/dbQuery');
+const { queryDatabase, getTransactionClient, commitTransaction, rollbackTransaction } = require('../../../../services/dbQuery');
 const { sendAndStoreNotification } = require('../../../../utils/notificationService');
-router.use(authMiddleware);
 
 router.post('/', async (req, res) => {
     console.log("yes creating task comment");
 
     const newReq = JSON.parse(JSON.stringify(req.user));
-    const user_id = newReq.userId;
-const io = req.app.get('io');
+    const user_id = req.user.id
+     if (!user_id) {
+        return res.status(401).json({ error: 'Unauthorized. Please log in again.' });
+    }
+
+    const io = req.app.get('io');
+
     try {
         const { id, comment, parent_comment_id } = req.body;
 
-        console.log("req.body comment", req.body);
+        if (!id) {
+            return res.status(400).json({ error: 'Invalid Task' });
+        }
+client = await getTransactionClient();
+
+const accessCheckQuery = `
+            SELECT 1
+            FROM tasks t
+            WHERE t.id = $1 AND t.created_by = $2
+            UNION
+            SELECT 1
+            FROM student_tasks st
+            WHERE st.task_id = $1 AND st.student_id = $2
+            LIMIT 1;
+        `;
+        const accessCheck = await queryDatabase(accessCheckQuery, [id, user_id], client);
+
+        if (accessCheck.length === 0) {
+            await rollbackTransaction(client);
+            return res.status(403).json({ error: 'Unauthorized: You cannot comment on this task' });
+        }
+
 
         // Convert empty string or undefined to null
         const safeParentCommentId = parent_comment_id && parent_comment_id !== '' ? parent_comment_id : null;
@@ -31,9 +55,8 @@ const io = req.app.get('io');
         `;
 
         const values = [id, user_id, comment, safeParentCommentId];
-        const CommentResult = await queryDatabase(query, values);
+        const CommentResult = await queryDatabase(query, values, client);
 
-        console.log("creating comment", CommentResult);
         const fetchStudentsDetails = `
                 SELECT 
             t.title AS task_title,
@@ -47,10 +70,10 @@ const io = req.app.get('io');
             GROUP BY t.id;
             `
 
-        const studentsAndTaskResult = await queryDatabase(fetchStudentsDetails, [id])
-console.log("studentsAndTaskResult", studentsAndTaskResult)
+        const studentsAndTaskResult = await queryDatabase(fetchStudentsDetails, [id], client)
+        await commitTransaction(client);
+
          const sendNotification = studentsAndTaskResult[0].student_ids.map(async (studentId) => {
-      console.log("Sending notification to ", studentId)
       await sendAndStoreNotification(io, studentId, {
                 type: 'Task Comment',
                 content: `New Comment created for task ${studentsAndTaskResult[0].task_title}.`,
@@ -65,9 +88,11 @@ console.log("studentsAndTaskResult", studentsAndTaskResult)
         });
 
     } catch (error) {
+        if (client) await rollbackTransaction(client);
         console.error(error);
         res.status(500).json({ error: 'Error creating task comment' });
     }
+
 });
 
 module.exports = router;

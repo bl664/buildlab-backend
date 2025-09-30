@@ -1,4 +1,3 @@
-const { MigrationInterface, QueryRunner } = require('typeorm');
 
 class DropColumnsFromUsersAndUsersAdditionalInfo1690000000002 {
     async up(queryRunner) {

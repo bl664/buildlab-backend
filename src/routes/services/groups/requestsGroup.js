@@ -4,12 +4,12 @@ const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase } = require('../../../services/dbQuery');
 const APP_CONFIG = require('../../../../config');
 
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
     console.log("yes fetching requests groups");
 
-    const mentor_id = req.user?.userId;
+    const mentor_id = req.user.id;
     console.log("mentorid", mentor_id);
 
     try {

@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "node app.js",
+    "server": "nodemon app.js",
     "migrate:run": "node scripts/migrate.js run",
     "migrate:revert": "node scripts/migrate.js revert",
     "migrate:status": "node scripts/migrate.js status",
@@ -17,14 +17,19 @@
   "dependencies": {
     "axios": "^1.12.1",
     "bcryptjs": "^2.4.3",
+    "compression": "^1.8.1",
     "cookie": "^1.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^4.21.1",
-    "express-rate-limit": "^8.0.1",
+    "express-rate-limit": "^8.1.0",
+    "express-slow-down": "^3.0.0",
     "fs": "^0.0.1-security",
+    "helmet": "^8.1.0",
+    "http-graceful-shutdown": "^3.1.14",
     "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^7.0.6",
     "nodemon": "^3.1.7",
     "path": "^0.12.7",
     "pg": "^8.16.2",
@@ -33,7 +38,8 @@
     "typeorm": "^0.3.25",
     "validator": "^13.12.0",
     "winston": "^3.16.0",
-    "winston-daily-rotate-file": "^5.0.0"
+    "winston-daily-rotate-file": "^5.0.0",
+    "xss": "^1.0.15"
   },
   "devDependencies": {
     "@types/node": "^24.0.3"

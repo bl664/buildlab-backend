@@ -9,7 +9,7 @@ module.exports = class Initial1730825499461 {
         `);
         await queryRunner.query(`
             CREATE TABLE "users" (
-                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "id" uuid NOT NULL DEFAULT gen_random_uuid(),
                 "name" character varying NOT NULL,
                 "email" character varying NOT NULL,
                 "passwordHash" character varying NOT NULL,
@@ -22,7 +22,7 @@ module.exports = class Initial1730825499461 {
         `);
         await queryRunner.query(`
             CREATE TABLE "team" (
-                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "id" uuid NOT NULL DEFAULT gen_random_uuid(),
                 "name" character varying NOT NULL,
                 "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
                 "updatedAt" TIMESTAMP NOT NULL DEFAULT now(),
@@ -37,7 +37,7 @@ module.exports = class Initial1730825499461 {
         `);
         await queryRunner.query(`
             CREATE TABLE "tasks" (
-                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "id" uuid NOT NULL DEFAULT gen_random_uuid(),
                 "title" character varying(255) NOT NULL,
                 "description" text,
                 "status" "public"."tasks_status_enum" NOT NULL DEFAULT 'pending',
@@ -54,7 +54,7 @@ module.exports = class Initial1730825499461 {
         `);
         await queryRunner.query(`
             CREATE TABLE "student_projects" (
-                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "id" uuid NOT NULL DEFAULT gen_random_uuid(),
                 "student_id" uuid NOT NULL,
                 "project_id" uuid NOT NULL,
                 "participation_start_date" date NOT NULL,
@@ -72,7 +72,7 @@ module.exports = class Initial1730825499461 {
         `);
         await queryRunner.query(`
             CREATE TABLE "settings" (
-                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "id" uuid NOT NULL DEFAULT gen_random_uuid(),
                 "user_id" uuid NOT NULL,
                 "notifications_enabled" boolean NOT NULL DEFAULT true,
                 "theme_preference" "public"."settings_theme_preference_enum" NOT NULL DEFAULT 'dark',
@@ -88,7 +88,7 @@ module.exports = class Initial1730825499461 {
         `);
         await queryRunner.query(`
             CREATE TABLE "projects" (
-                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "id" uuid NOT NULL DEFAULT gen_random_uuid(),
                 "name" character varying NOT NULL,
                 "description" text NOT NULL,
                 "status" "public"."projects_status_enum" NOT NULL DEFAULT 'active',
@@ -106,7 +106,7 @@ module.exports = class Initial1730825499461 {
         `);
         await queryRunner.query(`
             CREATE TABLE "project_teams" (
-                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "id" uuid NOT NULL DEFAULT gen_random_uuid(),
                 "project_id" uuid NOT NULL,
                 "team_id" uuid NOT NULL,
                 "role_in_project" "public"."project_teams_role_in_project_enum" NOT NULL,
@@ -117,7 +117,7 @@ module.exports = class Initial1730825499461 {
         `);
         await queryRunner.query(`
             CREATE TABLE "progress_tracking" (
-                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "id" uuid NOT NULL DEFAULT gen_random_uuid(),
                 "project_id" uuid NOT NULL,
                 "milestone" character varying(255) NOT NULL,
                 "progress_percentage" double precision NOT NULL,
@@ -131,7 +131,7 @@ module.exports = class Initial1730825499461 {
         `);
         await queryRunner.query(`
             CREATE TABLE "notifications" (
-                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "id" uuid NOT NULL DEFAULT gen_random_uuid(),
                 "user_id" uuid NOT NULL,
                 "message" text NOT NULL,
                 "status" "public"."notifications_status_enum" NOT NULL DEFAULT 'unread',
@@ -141,7 +141,7 @@ module.exports = class Initial1730825499461 {
         `);
         await queryRunner.query(`
             CREATE TABLE "messages" (
-                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "id" uuid NOT NULL DEFAULT gen_random_uuid(),
                 "sender_id" uuid NOT NULL,
                 "receiver_id" uuid NOT NULL,
                 "content" text NOT NULL,
@@ -151,7 +151,7 @@ module.exports = class Initial1730825499461 {
         `);
         await queryRunner.query(`
             CREATE TABLE "activity_feed" (
-                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "id" uuid NOT NULL DEFAULT gen_random_uuid(),
                 "user_id" uuid NOT NULL,
                 "project_id" uuid NOT NULL,
                 "action" character varying(255) NOT NULL,
@@ -179,7 +179,7 @@ module.exports = class Initial1730825499461 {
         `);
         await queryRunner.query(`
             ALTER TABLE "student_projects"
-            ADD "id" uuid NOT NULL DEFAULT uuid_generate_v4()
+            ADD "id" uuid NOT NULL DEFAULT gen_random_uuid()
         `);
         await queryRunner.query(`
             ALTER TABLE "student_projects"
@@ -432,7 +432,7 @@ module.exports = class Initial1730825499461 {
         `);
         await queryRunner.query(`
             ALTER TABLE "student_projects"
-            ADD "id" uuid NOT NULL DEFAULT uuid_generate_v4()
+            ADD "id" uuid NOT NULL DEFAULT gen_random_uuid()
         `);
         await queryRunner.query(`
             ALTER TABLE "student_projects"

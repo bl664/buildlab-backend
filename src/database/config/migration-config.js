@@ -44,7 +44,10 @@ const migrationConfig = {
         path.join(__dirname, '../migrations/1640000000030-AlterStudentGroupsAddMaxMembersAndTags.js'),
         path.join(__dirname, '../migrations/1690000000001-CreateUsersAdditionalInfoTable.js'),
         path.join(__dirname, '../migrations/1690000000002-DropColumnsFromUsersAndUsersAdditionalInfo.js'),
-        path.join(__dirname, '../migrations/1690000000003-MakeUserIdUniqueInUsersAdditionalInfo.js')
+        path.join(__dirname, '../migrations/1690000000003-MakeUserIdUniqueInUsersAdditionalInfo.js'),
+        path.join(__dirname, '../migrations/1650000000001-AddAuthColumnsToUsers.js'),
+        //path.join(__dirname, '../migrations/1650000000004-UpdateUsersAdditionalInfo.js'),
+        path.join(__dirname, '../migrations/1650000000003-AddVeifiedColumnToUsers')
     ],
 
     migrationsTableName: 'migrations_history',
@@ -104,6 +107,9 @@ const AlterStudentGroupsAddMaxMembersAndTags = require('../migrations/1640000000
 const CreateUsersAdditionalInfoTable = require('../migrations/1690000000001-CreateUsersAdditionalInfoTable.js');
 const DropColumnsFromUsersAndUsersAdditionalInfo = require('../migrations/1690000000002-DropColumnsFromUsersAndUsersAdditionalInfo.js')
 const MakeUserIdUniqueInUsersAdditionalInfo = require('../migrations/1690000000003-MakeUserIdUniqueInUsersAdditionalInfo.js')
+const AddColumnsToUsers = require('../migrations/1650000000001-AddAuthColumnsToUsers.js')
+// const CreateUsersAdditionalInfo = require('../migrations/1650000000004-UpdateUsersAdditionalInfo.js')
+const AddverifiedColumnsToUsers = require('../migrations/1650000000003-AddVeifiedColumnToUsers')
 
 const AppDataSourceWithDirectImports = new DataSource({
     ...migrationConfig,
@@ -138,7 +144,10 @@ const AppDataSourceWithDirectImports = new DataSource({
         AlterStudentGroupsAddMaxMembersAndTags,
         CreateUsersAdditionalInfoTable,
         DropColumnsFromUsersAndUsersAdditionalInfo,
-        MakeUserIdUniqueInUsersAdditionalInfo
+        MakeUserIdUniqueInUsersAdditionalInfo,
+        AddColumnsToUsers,
+        //CreateUsersAdditionalInfo,
+        AddverifiedColumnsToUsers
     ],
     // ssl: { rejectUnauthorized: false },
 

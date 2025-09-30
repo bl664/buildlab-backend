@@ -6,7 +6,7 @@ const { getStudentIdsByProjectId } = require('./helpers/getStudentsIds');
 const { queryDatabase } = require('../../../services/dbQuery');
 const { users } = require('../../messages/socket');
 
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 const createNotification = async (user_id, type, content, created_by, is_read, studentsData, mentorData, url) => {
     console.log("noti data is", user_id, type, content, created_by, is_read, studentsData, mentorData, url);
@@ -261,7 +261,7 @@ module.exports = router;
 // const authMiddleware = require('../../../middleware/auth');
 // const { getStudentIdsByProjectId } = require('./helpers/getStudentsIds')
 // const createNotification  = require('./helpers/createNotHelper')
-// router.use(authMiddleware);
+// //router.use(authMiddleware);
 
 // router.post('/', async (req, res) => {
 //     console.log("yes creating notification for project status")

@@ -1,25 +1,25 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../../../middleware/auth');
-const { queryDatabase } = require('../../../services/dbQuery');
+const { queryDatabase, getTransactionClient, commitTransaction, rollbackTransaction } = require('../../../services/dbQuery');
 const { sendAndStoreNotification } = require('../../../utils/notificationService');
-
-router.use(authMiddleware);
 
 router.post('/', async (req, res) => {
     console.log("yes create team")
-    let newReq = JSON.stringify(req.user, null, 2);
 
-    newReq = JSON.parse(newReq);
-    const mentor_id = newReq.userId;
-    console.log("mentorid", mentor_id)
+    const mentor_id = req.user.id;
+    if (!mentor_id) {
+        return res.status(401).json({ error: 'Unauthorized. Please log in again.' });
+    }
+
     const io = req.app.get('io');
+    let client;
     try {
+
+        client = await getTransactionClient();
         const { teamName, projectAssociation, members, teamDescription } = req.body.teamData;
 
         const {  team_lead, designer, developer, qa } = req.body.teamData.rolesData;
 
-        console.log("req,body", req.body.teamData)
         const formattedMembers = `{${members.join(',')}}`;
 
         const query = `
@@ -28,10 +28,8 @@ router.post('/', async (req, res) => {
         `;
         
         const values = [teamName,teamDescription,  projectAssociation, mentor_id];
-        const teamResult = await queryDatabase(query, values);
-console.log("teamResult.rows[0]", teamResult.length)
+        const teamResult = await queryDatabase(query, values, client);
         const teamId = teamResult[0].id;
-console.log("inserting into student")
         const studentTaskInsertQuery = `
             INSERT INTO student_teams (team_id, student_id, role)
             VALUES ($1, $2, $3);
@@ -54,7 +52,7 @@ console.log("inserting into student")
             }
 
             // Insert the student with the assigned role
-            await queryDatabase(studentTaskInsertQuery, [teamId, studentId, role]);
+            await queryDatabase(studentTaskInsertQuery, [teamId, studentId, role], client);
         }
 
         const sendNotification = members.map(async (memberId) => {
@@ -66,10 +64,35 @@ console.log("inserting into student")
             });
         });
 
-        res.status(201).json({ message: 'Tesk created successfully', teamId });
+        const fetchMissingDataQuery = `
+            SELECT 
+                mu.name AS mentor_name,
+                COALESCE(p.name, '') AS project_name,
+                NOW() AS created_at
+            FROM messaging_users mu
+            LEFT JOIN projects p ON p.id = $2
+            WHERE mu.user_id = $1
+        `;
+
+        const missingData = await queryDatabase(fetchMissingDataQuery, [mentor_id, projectAssociation], client);
+await commitTransaction(client);
+        const teamData = {
+            id: teamId,
+            name: teamName,
+            description: teamDescription,
+            created_at: missingData[0].created_at,
+            updated_at: missingData[0].created_at, // Same as created_at for new records
+            mentor_id: mentor_id,
+            mentor_name: missingData[0].mentor_name,
+            project_association: projectAssociation,
+            project_name: missingData[0].project_name,
+            member_count: members.length
+        };
+
+        res.status(201).json({ message: 'Tesk created successfully', teamData });
 
     } catch(error) {
-        await queryDatabase('ROLLBACK'); // Roll back in case of an error
+       if (client) await rollbackTransaction(client);
         console.error(error);
         res.status(500).json({ error: 'Error creating team' });
     }

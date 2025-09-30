@@ -4,7 +4,7 @@ class CreateUserProfilesTable1640000000003 {
     async up(queryRunner) {
         await queryRunner.query(`
             CREATE TABLE "user_profiles" (
-                "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+                "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
                 "user_id" uuid UNIQUE NOT NULL,
                 "full_name" varchar(100) NOT NULL,
                 "headline" varchar(150),

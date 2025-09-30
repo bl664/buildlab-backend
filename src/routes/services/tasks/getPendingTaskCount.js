@@ -1,21 +1,19 @@
 
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../../../middleware/auth');
-const { queryDatabase } = require('../../../services/dbQuery');
-const APP_CONFIG = require('../../../../config')
-router.use(authMiddleware);
-const jwt = require('jsonwebtoken');
+const { queryDatabase, getTransactionClient, commitTransaction, rollbackTransaction } = require('../../../services/dbQuery');
+
 
 router.get('/', async (req, res) => {
     console.log("yes getting pending Tasks")
-    let newReq = JSON.stringify(req.user, null, 2);
-    console.log("req is", newReq);
-
-    newReq = JSON.parse(newReq);
-    const mentor_id = newReq.userId;
-    console.log("mentorid", mentor_id)
+    const mentor_id = req.user.id
+    if (!mentor_id) {
+        return res.status(401).json({ error: 'Unauthorized. Please log in again.' });
+    }
+let client;
     try {
+          
+                  client = await getTransactionClient();
         const query = `
             SELECT 
             COUNT(*) FILTER (WHERE status IN ('pending', 'in_progress')) AS pending_tasks,
@@ -26,7 +24,8 @@ router.get('/', async (req, res) => {
 
         const values = [mentor_id];
 
-        const result = await queryDatabase(query, values);
+        const result = await queryDatabase(query, values, client);
+         await commitTransaction(client);
         const tasksCount = result;
         console.log("pending tasks are", tasksCount)
         return res.json({
@@ -34,7 +33,9 @@ router.get('/', async (req, res) => {
             count: tasksCount
         })
     } catch (error) {
-        res.status(401).json({ error: 'Invalid user' });
+        if (client) await rollbackTransaction(client);
+        console.error('Error fetching pending tasks count for mentor', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 })
 

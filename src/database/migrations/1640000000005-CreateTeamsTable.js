@@ -4,7 +4,7 @@ class CreateTeamsTable1640000000005 {
     async up(queryRunner) {
         await queryRunner.query(`
             CREATE TABLE "teams" (
-                "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+                "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
                 "name" varchar NOT NULL,
                 "project_association" uuid,
                 "mentor_id" uuid,

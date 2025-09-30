@@ -4,7 +4,7 @@ class CreateStudentGroupsTable1640000000020 {
     async up(queryRunner) {
         await queryRunner.query(`
             CREATE TABLE "student_groups" (
-                "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+                "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
                 "mentor_id" uuid,
                 "title" varchar,
                 "description" varchar,

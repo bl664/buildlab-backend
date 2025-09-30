@@ -2,14 +2,14 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase } = require('../../../services/dbQuery');
-router.use(authMiddleware);
+//router.use(authMiddleware);
 const bcrypt = require('bcryptjs');
 
 router.put('/', async (req, res) => {
     console.log("yes update pasword");
 
     const newReq = JSON.parse(JSON.stringify(req.user));
-    const user_id = newReq.userId;
+    const user_id = req.user.id
 
     try {
         const { oldPassword, newPassword } = req.body;

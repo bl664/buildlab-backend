@@ -11,12 +11,12 @@ const {
 const APP_CONFIG = require('../../../../config');
 const { sendAndStoreNotification } = require('../../../utils/notificationService');
 
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 router.post('/', async (req, res) => {
     console.log("Sending group invite with cooldown check");
 
-    const student_id = req.user?.userId;
+    const student_id = req.user.id;
     const io = req.app.get('io');
     const { group_id } = req.body;
     const client = await getTransactionClient();

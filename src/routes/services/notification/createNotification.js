@@ -3,14 +3,14 @@ const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
 const createNotification = require('./helpers/createNotHelper');
 
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 router.post('/', async (req, res) => {
     console.log("yes creating notification")
-    let newReq = JSON.stringify(req.user, null, 2);
+       
 
-    newReq = JSON.parse(newReq);
-    const created_by = newReq.userId;
+     
+    const created_by = req.user.id
     const { user_id, type, content, is_read, studentsData, mentorData, url } = req.body.notificationData;
 
     try {

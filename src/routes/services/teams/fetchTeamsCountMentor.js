@@ -3,15 +3,15 @@ const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase } = require('../../../services/dbQuery');
 const APP_CONFIG = require('../../../../config');
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
     console.log("yes getting Teams count for mentor");
-    let newReq = JSON.stringify(req.user, null, 2);
-    console.log("req is", newReq);
+       
+      
 
-    newReq = JSON.parse(newReq);
-    const user_id = newReq.userId;
+     
+    const user_id = req.user.id
     console.log("mentorid", user_id);
 
     try {

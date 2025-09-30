@@ -3,10 +3,10 @@ const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase } = require('../../../services/dbQuery');
 
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
-    const student_id = req.user?.userId;
+    const student_id = req.user.id;
 
     try {
         const lastRequest = await queryDatabase(`

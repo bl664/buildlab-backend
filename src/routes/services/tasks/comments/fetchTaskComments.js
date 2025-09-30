@@ -1,16 +1,25 @@
 
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../../../../middleware/auth');
-const { queryDatabase } = require('../../../../services/dbQuery');
-router.use(authMiddleware);
+const { queryDatabase, getTransactionClient, commitTransaction, rollbackTransaction } = require('../../../../services/dbQuery');
+
 
 router.get('/', async (req, res) => {
     console.log("yes fetch task comments")
-    const { id } = req.query;
+    const user_id = req.user.id;
 
+    if (!user_id) {
+        return res.status(401).json({ error: 'Unauthorized. Please log in again.' });
+    }
+
+    const { id } = req.query;
+     if (!id) {
+        return res.status(400).json({ error: 'Invalid Task' });
+    }
+
+ let client;
     try {
-        console.log("id is ", id, req.query.id)
+        client = await getTransactionClient();
         const query = `
 SELECT 
     c.id AS id,
@@ -35,18 +44,19 @@ LEFT JOIN messaging_users mu_parent ON pc.author_id = mu_parent.user_id
 WHERE c.task_id = $1
 ORDER BY c.created_at ASC;
 
-
         `;
         const values = [id];
 
-        const commentResult = await queryDatabase(query, values);
-        console.log("task comments are",commentResult[0])
+        const commentResult = await queryDatabase(query, values, client);
+        await commitTransaction(client);
         return res.json({
             message: 'fetched',
             comments: commentResult
         })
     } catch (error) {
-        res.status(401).json({ error: 'Invalid user' });
+        if (client) await rollbackTransaction(client);
+        console.error('Error Fetching task comments:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 })
 

@@ -3,7 +3,7 @@ const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase } = require('../../../services/dbQuery');
 
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 router.get('/:id', async (req, res) => {
   const { id } = req.params;

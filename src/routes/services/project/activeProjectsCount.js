@@ -1,18 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../../../middleware/auth');
-const { queryDatabase } = require('../../../services/dbQuery');
-const APP_CONFIG = require('../../../../config')
-router.use(authMiddleware);
-const jwt = require('jsonwebtoken');
+const { queryDatabase, getTransactionClient } = require('../../../services/dbQuery');
 
 router.get('/', async (req, res) => {
-    console.log("ye active project count")
-    const decoded = jwt.verify(req.cookies.bl_auth, APP_CONFIG.BL_AUTH_SECRET_KEY);
+    console.log("yes active project count")
 
-    let user_id = decoded.userId
-    console.log("user_id", user_id)
+    let user_id = req.user.id
+
+    if (!user_id) {
+        return res.status(401).json({ error: 'Unauthorized. Please log in again.' });
+    }
+    let client;
     try {
+        client = await getTransactionClient();
+
         const query = `
         SELECT 
         p.status, 
@@ -24,15 +25,23 @@ router.get('/', async (req, res) => {
         `;
         const values = [user_id];
 
-        const result = await queryDatabase(query, values);
+        const result = await queryDatabase(query, values, client);
+
+        await client.query('COMMIT');
+
         const statusCounts = result;
         console.log("statusCounts are", statusCounts)
+
         return res.json({
             message: 'fetched',
             statusCounts
         })
     } catch (error) {
-        res.status(401).json({ error: 'Invalid user' });
+        if (client) await client.query('ROLLBACK');
+        console.error('Error fetching projects counts', error);
+        res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        if (client) client.release();
     }
 })
 

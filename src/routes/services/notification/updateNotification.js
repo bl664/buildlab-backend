@@ -2,15 +2,15 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase } = require('../../../services/dbQuery');
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 router.put('/', async (req, res) => {
     console.log("updating notification")
-    let newReq = JSON.stringify(req.user, null, 2);
-    console.log("req is", newReq);
+       
+      
 
-    newReq = JSON.parse(newReq);
-    const user_id = newReq.userId;
+     
+    const user_id = req.user.id
 
     try {
         const { id } = req.body;

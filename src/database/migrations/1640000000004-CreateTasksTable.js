@@ -4,7 +4,7 @@ class CreateTasksTable1640000000004 {
     async up(queryRunner) {
         await queryRunner.query(`
             CREATE TABLE "tasks" (
-                "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+                "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
                 "title" varchar(255) NOT NULL,
                 "description" text,
                 "status" tasks_status_enum NOT NULL DEFAULT 'pending',

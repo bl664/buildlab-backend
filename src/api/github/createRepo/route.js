@@ -1,7 +1,6 @@
 const { checkRepoExists } = require('./checkRepoExists');
 const { queryDatabase } = require('../../../services/dbQuery');
 
-// Validation functions (same as before)
 function validateRepoName(repoName) {
     const errors = [];
     

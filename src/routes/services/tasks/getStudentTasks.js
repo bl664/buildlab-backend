@@ -1,21 +1,19 @@
 
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../../../middleware/auth');
-const { queryDatabase } = require('../../../services/dbQuery');
-const APP_CONFIG = require('../../../../config')
-router.use(authMiddleware);
-const jwt = require('jsonwebtoken');
+const { queryDatabase, getTransactionClient, commitTransaction, rollbackTransaction } = require('../../../services/dbQuery');
 
 router.get('/', async (req, res) => {
     console.log("yes getting student Tasks")
-    let newReq = JSON.stringify(req.user, null, 2);
-    console.log("req is", newReq);
 
-    newReq = JSON.parse(newReq);
-    const student_id = newReq.userId;
-    console.log("mentorid", student_id)
+    const student_id = req.user.id
+     if (!student_id) {
+        return res.status(401).json({ error: 'Unauthorized. Please log in again.' });
+    }
+    let client;
+
     try {
+        client = await getTransactionClient();
         const query = `
       SELECT 
   t.id,
@@ -35,15 +33,19 @@ GROUP BY t.id, t.title, t.description, t.due_date, t.status, t.priority;
         `;
         const values = [student_id];
 
-        const result = await queryDatabase(query, values);
+        const result = await queryDatabase(query, values, client);
+                await commitTransaction(client);
+
         const tasks = result;
         console.log("tasks are thesse", tasks)
         return res.json({
             message: 'fetched',
             result: tasks
         })
-    } catch(error) {
-        res.status(401).json({ error: 'Invalid user' });
+    } catch (error) {
+        if (client) await rollbackTransaction(client);
+        console.error('Error fetching tasks for student:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 })
 

@@ -1,29 +1,41 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../../../middleware/auth');
-const { queryDatabase } = require('../../../services/dbQuery');
-const APP_CONFIG = require('../../../../config');
-const jwt = require('jsonwebtoken');
+const { queryDatabase, getTransactionClient } = require('../../../services/dbQuery');
 const { updateGitHubRepoName } = require('../../../api/github/updateRepo/route');
 const { sendAndStoreNotification } = require('../../../utils/notificationService');
 
-router.use(authMiddleware);
-
 router.put('/', async (req, res) => {
     console.log("yes project update");
+
+    const user_id = req.user.id;
+
+    if (!user_id) {
+        return res.status(401).json({ error: 'Unauthorized. Please log in again.' });
+    }
+
     const io = req.app.get('io');
 
     try {
-        const decoded = jwt.verify(req.cookies.bl_auth, APP_CONFIG.BL_AUTH_SECRET_KEY);
-        const user_id = decoded.userId;
-        console.log("mentor", user_id);
-
         const { id, updates } = req.body;
-        console.log("update req.body", req.body);
+
         if (!id || !updates || typeof updates !== 'object') {
             console.log("Invalid ID or updates object")
             return res.status(400).json({ error: 'Invalid ID or updates object' });
         }
+
+        const { name, description, status, start_date, end_date, tech_stack, skills_required } = updates;
+
+        const { students: updatedStudentIds } = updates;
+
+        if (name !== undefined && (typeof name !== 'string' || !name.trim())) {
+            return res.status(400).json({ error: 'Invalid project name' });
+        }
+
+        if (!Array.isArray(updatedStudentIds)) {
+            return res.status(400).json({ error: 'students must be an array' });
+        }
+
+        let client = await getTransactionClient();
 
         // Fetch project creator and assigned students
         const accessCheckQuery = `
@@ -44,51 +56,59 @@ router.put('/', async (req, res) => {
             LIMIT 1;
             `;
 
-        const accessResult = await queryDatabase(accessCheckQuery, [id, user_id]);
-        console.log("access result", accessResult)
-        if (accessResult.length === 0) {
+        const accessResult = await queryDatabase(accessCheckQuery, [id, user_id], client);
+
+        if (!accessResult || accessResult.length === 0) {
+            await client.query('ROLLBACK');
+            client.release();
             return res.status(403).json({ error: 'Unauthorized: Access denied to update this project' });
         }
-        console.log("access granted to update project")
-        const { name, description, status, start_date, end_date, tech_stack, skills_required } = updates;
 
-        // 1. Fetch current project details
-        const currentProjectQuery = 'SELECT name, github_repo_name, github_repo_url FROM projects WHERE id = $1';
-        const currentProjectResult = await queryDatabase(currentProjectQuery, [id]);
+        try {
+            const currentProjectQuery = 'SELECT name, github_repo_name, github_repo_url FROM projects WHERE id = $1';
+            const currentProjectResult = await queryDatabase(currentProjectQuery, [id], client);
 
-        if (currentProjectResult.length === 0) {
-            return res.status(404).json({ error: 'Project not found' });
-        }
-        console.log("currentProjectResult", currentProjectResult)
-        const currentProjectName = currentProjectResult[0].name;
-        const currentRepoName = currentProjectResult[0].github_repo_name;
-        const newRepoName = name;
-
-        let updatedGitHubFields = {
-            github_repo_name: currentRepoName,
-            github_repo_url: currentProjectResult[0].github_repo_url
-        };
-        console.log("currentProjectName !== name", currentProjectName, name, currentProjectName !== name)
-        // 2. Update GitHub repository name if changed
-        if (currentProjectName !== name) {
-            const updateRepoResponse = await updateGitHubRepoName(currentRepoName, newRepoName, user_id);
-
-            if (!updateRepoResponse || !updateRepoResponse?.github_repo_name || !updateRepoResponse?.github_repo_url) {
-                console.error('Failed to update GitHub repository name');
-                return res.status(500).json({ error: 'Failed to update GitHub repository name' });
+            if (currentProjectResult.length === 0) {
+                await client.query('ROLLBACK');
+                client.release();
+                return res.status(404).json({ error: 'Project not found' });
             }
 
-            updatedGitHubFields = {
-                github_repo_name: updateRepoResponse?.github_repo_name,
-                github_repo_url: updateRepoResponse?.github_repo_url
+            const currentProjectName = currentProjectResult[0].name;
+            const currentRepoName = currentProjectResult[0].github_repo_name;
+            const newRepoName = name;
+
+            let updatedGitHubFields = {
+                github_repo_name: currentRepoName,
+                github_repo_url: currentProjectResult[0].github_repo_url
             };
 
-        } else {
-            console.log("GitHub repository name unchanged, skipping update.");
-        }
+            if (name && name.trim() !== currentProjectName) {
+                const updateRepoResponse = await updateGitHubRepoName(currentRepoName, newRepoName, user_id);
 
-        // 3. Update project in the database
-        const updateQuery = `
+                if (!updateRepoResponse || !updateRepoResponse?.github_repo_name || !updateRepoResponse?.github_repo_url) {
+                    await client.query('ROLLBACK');
+                    client.release();
+
+                    console.error('Failed to update GitHub repository name');
+                    return res.status(500).json({ error: 'Failed to update GitHub repository name' });
+                }
+
+                updatedGitHubFields = {
+                    github_repo_name: updateRepoResponse?.github_repo_name,
+                    github_repo_url: updateRepoResponse?.github_repo_url
+                };
+            }
+
+            const newName = name !== undefined ? name.trim() : currentProjectName;
+            const newDescription = description !== undefined ? description : null;
+            const newStatus = status !== undefined ? status : null;
+            const newStart = start_date !== undefined ? start_date : null;
+            const newEnd = end_date !== undefined ? end_date : null;
+            const newTechStack = tech_stack !== undefined ? tech_stack : null;
+            const newSkillsRequired = skills_required !== undefined ? skills_required : null;
+
+            const updateQuery = `
             UPDATE projects
             SET name = $1,
                 description = $2,
@@ -98,81 +118,104 @@ router.put('/', async (req, res) => {
                 tech_stack = $6,
                 skills_required = $7,
                 github_repo_name = $8,
-                github_repo_url = $9
-            WHERE id = $10
+                github_repo_url = $9,
+                updated_by_id = $10,
+                updated_at = now()
+            WHERE id = $11
             RETURNING *;
         `;
 
-        const values = [
-            name,
-            description,
-            status,
-            start_date,
-            end_date,
-            tech_stack,
-            skills_required,
-            updatedGitHubFields.github_repo_name,
-            updatedGitHubFields.github_repo_url,
-            id,
+            const updateValues = [
+                newName,
+                newDescription,
+                newStatus,
+                newStart,
+                newEnd,
+                newTechStack,
+                newSkillsRequired,
+                updatedGitHubFields.github_repo_name,
+                updatedGitHubFields.github_repo_url,
+                user_id,
+                id
+            ];
 
-        ];
+            const updateResult = await queryDatabase(updateQuery, updateValues, client);
 
-        const result = await queryDatabase(updateQuery, values);
+            if (!updateResult || updateResult.length === 0) {
+                await client.query('ROLLBACK');
+                client.release();
+                return res.status(404).json({ error: 'Project not found after update' });
+            }
 
-        if (result.rowCount === 0) {
-            return res.status(404).json({ error: 'Project not found after update' });
+            const updatedProject = updateResult[0];
+
+            const existingStudentRows = await queryDatabase('SELECT student_id FROM student_projects WHERE project_id = $1', [id], client);
+
+            const existingStudentIds = existingStudentRows.map(row => row.student_id);
+
+            const normalizedUpdatedIds = updatedStudentIds.map(s => {
+                if (!s) return null;
+                if (typeof s === 'object') return s.user_id || s.id || null;
+                return s;
+            }).filter(Boolean);
+
+            const updatedSet = new Set(updatedStudentIds);
+            const existingSet = new Set(existingStudentIds);
+
+            const toAdd = normalizedUpdatedIds.filter(sid => !existingSet.has(sid));
+            const toRemove = existingStudentIds.filter(sid => !updatedSet.has(sid));
+
+            if (toRemove.length > 0) {
+                await queryDatabase(
+                    `DELETE FROM student_projects WHERE project_id = $1 AND student_id = ANY($2::uuid[])`,
+                    [id, toRemove], client
+                );
+            }
+
+            for (const studentId of toAdd) {
+                await queryDatabase(
+                    `INSERT INTO student_projects (project_id, student_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+                    [id, studentId.user_id], client
+                );
+            }
+
+            try {
+                const notificationPromises = normalizedUpdatedIds.map(async (student) => {
+                    console.log("student is ", student)
+                    try {
+                        await sendAndStoreNotification(io, student, {
+                            type: 'project_updated',
+                            content: `project ${name} has been updated by ${user_id}`,
+                            url: `/projects/${id}`
+                        });
+                    } catch (notifyErr) {
+                        console.warn('Notification failed for student', studentId, notifyErr && notifyErr.message);
+                    }
+                })
+                await Promise.all(notificationPromises);
+            } catch (notifyErr) {
+            }
+            await client.query('COMMIT');
+            client.release();
+
+            return res.json({
+                message: 'Project updated successfully',
+                project: updatedProject
+            });
+        } catch (txErr) {
+            try { await client.query('ROLLBACK'); } catch (e) { /* ignore */ }
+            client.release();
+
+            console.error('Transaction error while updating project:', txErr);
+            return res.status(500).json({ error: 'Failed to update project', details: txErr.message });
+
         }
 
-        // 4. Sync student_projects
-        const { students: updatedStudentIds } = updates;
-
-        // 4a. Get existing student IDs for the project
-        const existingStudentRows = await queryDatabase(
-            'SELECT student_id FROM student_projects WHERE project_id = $1',
-            [id]
-        );
-        const existingStudentIds = existingStudentRows.map(row => row.student_id);
-
-        // 4b. Determine students to add and remove
-        const updatedSet = new Set(updatedStudentIds);
-        const existingSet = new Set(existingStudentIds);
-
-        const toAdd = updatedStudentIds.filter(studentId => !existingSet.has(studentId));
-        const toRemove = existingStudentIds.filter(studentId => !updatedSet.has(studentId));
-
-        // 4c. Remove unassigned students
-        if (toRemove.length > 0) {
-            await queryDatabase(
-                `DELETE FROM student_projects WHERE project_id = $1 AND student_id = ANY($2::uuid[])`,
-                [id, toRemove]
-            );
-        }
-
-        // 4d. Add new students
-        for (const studentId of toAdd) {
-            await queryDatabase(
-                `INSERT INTO student_projects (project_id, student_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-                [id, studentId.user_id]
-            );
-        }
-
-        const sendNotification = updatedStudentIds.map(async (student) => {
-            console.log("sending notification to", student.user_id)
-            await sendAndStoreNotification(io, student.user_id, {
-                    type: 'project_updated',
-                    content: `project ${name} has been updated by ${user_id}`,
-                    url: `/projects/${id}`
-                });
-            })
-
-        return res.json({
-            message: 'Project updated successfully',
-            project: result[0]
-        });
+        // const toAdd = updatedStudentIds.filter(studentId => !existingSet.has(studentId));
+        // const toRemove = existingStudentIds.filter(studentId => !updatedSet.has(studentId));
 
     } catch (error) {
-        console.error('Error updating project:', error.message);
-        queryDatabase('ROLLBACK');
+        console.error('Error updating project:', error);
         return res.status(500).json({ error: error.message || 'Internal server error' });
     }
 });

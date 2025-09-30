@@ -1,13 +1,12 @@
-// Create new route: /student-request-status
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase } = require('../../../services/dbQuery');
 
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
-    const student_id = req.user?.userId;
+    const student_id = req.user.id;
 
     try {
         // Check for any pending request

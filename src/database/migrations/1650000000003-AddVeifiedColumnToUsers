@@ -1,0 +1,21 @@
+class AddVerifiedColumnToUsers1650000000003 {
+    async up(queryRunner) {
+        // Add new columns for login security
+        await queryRunner.query(`
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS verified BOOLEAN DEFAULT FALSE
+        `);
+    }
+
+    async down(queryRunner) {
+        // Drop the columns if rollback is needed
+        await queryRunner.query(`
+            ALTER TABLE users
+            DROP COLUMN IF EXISTS verified
+        `);
+    }
+}
+
+module.exports = AddVerifiedColumnToUsers1650000000003;
+
+

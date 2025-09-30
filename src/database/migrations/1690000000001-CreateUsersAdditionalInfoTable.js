@@ -1,14 +1,14 @@
-const { MigrationInterface, QueryRunner } = require('typeorm');
-
-class CreateUsersAdditionalInfoTable1640000000027 {
+class CreateUsersAdditionalInfoTable1690000000001 {
     async up(queryRunner) {
+        // Ensure pgcrypto is available for gen_random_uuid()
+        await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "pgcrypto";`);
+
         await queryRunner.query(`
             CREATE TABLE IF NOT EXISTS users_additional_info (
-                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                role users_role_enum NOT NULL DEFAULT 'member',
-                verified BOOLEAN DEFAULT false,
-                has_group BOOLEAN DEFAULT false
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                user_id UUID NOT NULL,
+                verification_token TEXT DEFAULT NULL,
+                verification_token_expires TIMESTAMP
             );
         `);
 
@@ -18,8 +18,10 @@ class CreateUsersAdditionalInfoTable1640000000027 {
             FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE;
         `);
 
-        await queryRunner.query(`CREATE INDEX "idx_additional_info_user_id" ON "users_additional_info" ("user_id");`);
-        await queryRunner.query(`CREATE INDEX "idx_additional_info_role" ON "users_additional_info" ("role");`);
+        await queryRunner.query(`
+            CREATE INDEX "idx_additional_info_user_id" 
+            ON "users_additional_info" ("user_id");
+        `);
     }
 
     async down(queryRunner) {
@@ -29,4 +31,4 @@ class CreateUsersAdditionalInfoTable1640000000027 {
     }
 }
 
-module.exports = CreateUsersAdditionalInfoTable1640000000027;
+module.exports = CreateUsersAdditionalInfoTable1690000000001;

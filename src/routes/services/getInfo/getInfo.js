@@ -1,19 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase } = require('../../../services/dbQuery');
 
-router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
-  console.log("getting info");
-  const user_id = req.user.userId;
+  console.log("getting info", req.user);
+  const user_id = req.user.id;
+
+  if (!user_id) {
+    return res.status(401).json({ error: 'Unauthorized. Please log in again.' });
+  }
 
   try {
     const query = `
       SELECT name, email, role, user_id AS id
       FROM messaging_users 
-      WHERE user_id = $1;
+      WHERE user_id = $1
+      LIMIT 1;
     `;
     const values = [user_id];
 
@@ -24,7 +27,6 @@ router.get('/', async (req, res) => {
     }
 
     const user = result[0];
-    console.log("user is", user);
 
     return res.json({
       message: 'fetched',

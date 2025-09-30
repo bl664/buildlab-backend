@@ -6,15 +6,14 @@ const APP_CONFIG = require('../../../../config');
 const jwt = require('jsonwebtoken');
 const { sendAndStoreNotification } = require('../../../utils/notificationService');
 
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 router.put('/', async (req, res) => {
   console.log("updating team...")
       const io = req.app.get('io');
 
   try {
-    const decoded = jwt.verify(req.cookies.bl_auth, APP_CONFIG.BL_AUTH_SECRET_KEY);
-    const user_id = decoded.userId;
+    const user_id = req.user.id;
 console.log("req.body.updates", req.body.updates)
 
     const { team_id, team_name, team_description, students, rolesData } = req.body.updates;

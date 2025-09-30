@@ -5,12 +5,12 @@ const { queryDatabase, getTransactionClient } = require('../../../services/dbQue
 const { v4: uuidv4 } = require('uuid');
 const { sendAndStoreNotification } = require('../../../utils/notificationService');
 
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 router.post('/', async (req, res) => {
   console.log("Creating meeting...", req.body.meetingData);
 
-  const createdById = req.user.userId;
+  const createdById = req.user.id;
   const { project_id, students_list, mentor_id, room_name, room_link, started_at, ended_at } = req.body.meetingData || {};
 const io = req.app.get('io');
 

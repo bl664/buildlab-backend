@@ -127,7 +127,7 @@ const initializeSocket = (server) => {
     socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
       try {
         if (!message || !message.trim()) return;
-
+console.log("message is ", senderId, receiverId, message.trim())
         const result = await queryDatabase(
           `INSERT INTO messages (sender_id, receiver_id, message, status) 
        VALUES ($1, $2, $3, $4) RETURNING id, created_at`,
@@ -464,19 +464,6 @@ function notifyUsersStatus(io, userIds, userId, isOnline) {
     }
   });
 }
-
-// async function getAllUsers() {
-//   try {
-//     const result = await queryDatabase(
-//       `SELECT id FROM users WHERE role IN ('student', 'mentor')`,
-//       []
-//     );
-//     return result.map(row => row.id);
-//   } catch (err) {
-//     console.error("Error fetching all users:", err.message);
-//     return [];
-//   }
-// }
 
 module.exports = initializeSocket;
 module.exports.users = users;

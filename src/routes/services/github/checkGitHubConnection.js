@@ -3,12 +3,12 @@ const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase } = require('../../../services/dbQuery');
 
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
     console.log("getting github user from DB")
     try {
-        const userId = req.user?.userId;
+        const userId = req.user.id;
 console.log("userId ", userId)
         if (!userId) {
             return res.status(400).json({ error: 'User ID is required' });

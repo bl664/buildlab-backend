@@ -25,7 +25,7 @@ const getTransactionClient = async () => {
     return client;
   } catch (error) {
     // If BEGIN fails, release the client
-    client.release();
+    // client.release();
     throw error;
   }
 };

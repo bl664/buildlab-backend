@@ -3,16 +3,16 @@ const router = express.Router();
 const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase } = require('../../../services/dbQuery');
 const APP_CONFIG = require('../../../../config');
-router.use(authMiddleware);
+//router.use(authMiddleware);
 const jwt = require('jsonwebtoken');
 
 router.get('/', async (req, res) => {
     console.log("yes getting groups");
-    let newReq = JSON.stringify(req.user, null, 2);
-    console.log("req is", newReq);
+       
+      
 
-    newReq = JSON.parse(newReq);
-    const mentor_id = newReq.userId;
+     
+    const mentor_id =req.user.id;
     console.log("mentorid", mentor_id);
 
     try {
