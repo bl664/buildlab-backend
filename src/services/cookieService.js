@@ -6,6 +6,7 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
     httpOnly: APP_CONFIG.BL_AUTH_COOKIE_HTTP_ONLY,
     secure:  APP_CONFIG.BL_AUTH_COOKIE_SECURE === 'true',
     sameSite: 'none',
+    domain: APP_CONFIG.BL_AUTH_COOKIE_ALLOWED_DOMAIN,
     maxAge: APP_CONFIG.BL_AUTH_COOKIE_MAXAGE,
     path: '/',
   };
