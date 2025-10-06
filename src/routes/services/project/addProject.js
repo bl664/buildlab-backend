@@ -192,12 +192,21 @@ router.post('/', async (req, res) => {
             await client.query('COMMIT');
             console.log('Transaction committed successfully');
 
+            const payload = {
+                id: projectId,
+                name: name,
+                description: description,
+                status: status,
+                end_date: end_date,
+                assignee: teamMembers?.length
+            }
+            console.log("paylaod is", payload )
             // Success response
             return res.status(201).json({
                 success: true,
                 message: 'Project created successfully',
                 data: {
-                    projectId,
+                    project: payload,
                     repoUrl: repoData.repoUrl,
                     repoName: repoData.repoName
                 }

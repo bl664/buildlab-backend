@@ -26,6 +26,32 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
 module.exports = { setAuthCookies };
 
 
+// const setAuthCookies = (res, accessToken, refreshToken) => {
+//   console.log('auth', APP_CONFIG.BL_AUTH_COOKIE_HTTP_ONLY, process.env.NODE_ENV === 'production', APP_CONFIG.BL_AUTH_COOKIE_MAXAGE)
+
+//   const baseOptions = {
+//   httpOnly: true,
+//   secure: process.env.NODE_ENV === 'production',
+//   sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+//   domain: process.env.NODE_ENV === 'production' ? '.thebuildlab.app' : undefined,
+//   maxAge: 86400000,
+//   path: '/',
+// };
+
+//   // Access token (short lived)
+//   res.cookie(APP_CONFIG.BL_AUTH_COOKIE_NAME , accessToken, {
+//     ...baseOptions
+//   });
+
+//   // Refresh token (long lived)
+//   res.cookie(APP_CONFIG.BL_AUTH_REFRESH_COOKIE_NAME || 'bl_refresh', refreshToken, {
+//     ...baseOptions,
+//     maxAge: parseInt(APP_CONFIG.BL_AUTH_REFRESH_COOKIE_MAXAGE || (7 * 24 * 60 * 60 * 1000), 10),
+//   });
+// };
+
+// module.exports = { setAuthCookies };
+
 
 // const APP_CONFIG = require('../../config');
 // const { generateToken } = require('../utils/tokenManager');

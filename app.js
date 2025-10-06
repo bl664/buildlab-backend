@@ -1,4 +1,3 @@
-// app.js
 const http = require('http');
 const cluster = require('cluster');
 const os = require('os');
@@ -9,31 +8,67 @@ const slowDown = require('express-slow-down');
 
 const APP_CONFIG = require('./config');
 const initializeSocket = require('./src/routes/messages/socket');
-const createApp = require('./src'); 
+const createApp = require('./src');
 
+// ---------------- Security Config ----------------
 const helmetMiddleware = helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https:"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "wss:", "ws:"],
+      connectSrc: [
+        "'self'",
+        "wss:",
+        "ws:",
+        APP_CONFIG.MENTOR_REDIRECT_URL_SUCCESS,
+        APP_CONFIG.DEFAULT_REDIRECT_URL,
+        APP_CONFIG.STUDENT_REDIRECT_URL_SUCCESS,
+        APP_CONFIG.CORS_TRUSTED_ORIGIN,
+        ...(process.env.NODE_ENV === 'development'
+          ? [
+              'http://localhost:3000',
+              'http://127.0.0.1:3000',
+              'http://localhost:3001',
+              'http://127.0.0.1:3001',
+              'http://localhost:3002',
+              'http://127.0.0.1:3002',
+            ]
+          : []),
+      ],
       fontSrc: ["'self'", "https:"],
       objectSrc: ["'none'"],
       frameAncestors: ["'self'"],
-      upgradeInsecureRequests: [],
     },
   },
   hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
   referrerPolicy: { policy: 'no-referrer' },
-  crossOriginEmbedderPolicy: true,
-  crossOriginResourcePolicy: { policy: 'same-origin' },
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
 });
 
-const generalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5, skipSuccessfulRequests: true });
-const speedLimiter = slowDown({ windowMs: 15 * 60 * 1000, delayAfter: 20, delayMs: () => 500 });
+// ---------------- Rate & Speed Limiters ----------------
+// ✅ Skip rate limiting for preflight (OPTIONS) and health checks
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  skip: (req) => req.method === 'OPTIONS' || req.path === '/health',
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  skipSuccessfulRequests: true,
+  skip: (req) => req.method === 'OPTIONS',
+});
+
+const speedLimiter = slowDown({
+  windowMs: 15 * 60 * 1000,
+  delayAfter: 20,
+  delayMs: () => 500,
+  skip: (req) => req.method === 'OPTIONS',
+});
 
 // ---------------- Clustering ----------------
 if (cluster.isPrimary && process.env.NODE_ENV === 'production') {
@@ -47,16 +82,20 @@ if (cluster.isPrimary && process.env.NODE_ENV === 'production') {
     cluster.fork();
   });
 } else {
-  const app = createApp({ helmetMiddleware, generalLimiter, authLimiter, speedLimiter });
-  const PORT = APP_CONFIG.SERVER_PORT || 5001;
+  const app = createApp({
+    helmetMiddleware,
+    generalLimiter,
+    authLimiter,
+    speedLimiter,
+  });
 
+  const PORT = APP_CONFIG.SERVER_PORT || 5001;
   const server = http.createServer(app);
 
-  // Init Socket.IO
   const io = initializeSocket(server);
   app.set('io', io);
 
-  // Graceful shutdown
+  // ---------------- Graceful Shutdown ----------------
   process.on('SIGTERM', () => {
     console.log('SIGTERM received, shutting down gracefully');
     gracefulShutdown(server, {
@@ -90,6 +129,7 @@ if (cluster.isPrimary && process.env.NODE_ENV === 'production') {
     }
   });
 }
+
 
 
 // const express = require('express');

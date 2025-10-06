@@ -15,7 +15,7 @@ console.log("userId ", userId)
         }
 
         const result = await queryDatabase(
-            'SELECT * FROM github_users WHERE user_id = $1',
+            'SELECT github_user_name, avatar_url, html_url FROM github_users WHERE user_id = $1',
             [userId]
         );
 

@@ -3,7 +3,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const compression = require('compression');
 const corsMiddleware = require('./middleware/cors');
-const authRoutes = require('./routes');
+const allRoutes = require('./routes');
 
 function createApp({ helmetMiddleware, generalLimiter, authLimiter, speedLimiter }) {
   const app = express();
@@ -48,7 +48,7 @@ function createApp({ helmetMiddleware, generalLimiter, authLimiter, speedLimiter
   });
 
   // Routes
-  app.use('/', authRoutes);
+  app.use('/', allRoutes);
 
   // 404
   app.use('*', (req, res) => {

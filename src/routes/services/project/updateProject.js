@@ -162,9 +162,16 @@ router.put('/', async (req, res) => {
             const updatedSet = new Set(updatedStudentIds);
             const existingSet = new Set(existingStudentIds);
 
-            const toAdd = normalizedUpdatedIds.filter(sid => !existingSet.has(sid));
-            const toRemove = existingStudentIds.filter(sid => !updatedSet.has(sid));
 
+            console.log("updateset", updatedSet)
+            console.log("existing set", existingSet)
+
+            const toAdd = normalizedUpdatedIds.filter(student => !existingSet.has(student.user_id));
+            const toRemove = existingStudentIds.filter(sid => !updatedSet.has(sid));
+            
+            console.log("to add", toAdd)
+            console.log("to remove", toRemove)
+            
             if (toRemove.length > 0) {
                 await queryDatabase(
                     `DELETE FROM student_projects WHERE project_id = $1 AND student_id = ANY($2::uuid[])`,
@@ -173,9 +180,10 @@ router.put('/', async (req, res) => {
             }
 
             for (const studentId of toAdd) {
+                console.log("to add student id", studentId)
                 await queryDatabase(
                     `INSERT INTO student_projects (project_id, student_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-                    [id, studentId.user_id], client
+                    [id, studentId], client
                 );
             }
 

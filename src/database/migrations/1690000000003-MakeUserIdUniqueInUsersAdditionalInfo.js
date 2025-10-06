@@ -16,5 +16,4 @@ class MakeUserIdUniqueInUsersAdditionalInfo1690000000003 {
   }
 };
 
-
 module.exports = MakeUserIdUniqueInUsersAdditionalInfo1690000000003;

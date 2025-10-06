@@ -47,7 +47,8 @@ const migrationConfig = {
         path.join(__dirname, '../migrations/1690000000003-MakeUserIdUniqueInUsersAdditionalInfo.js'),
         path.join(__dirname, '../migrations/1650000000001-AddAuthColumnsToUsers.js'),
         //path.join(__dirname, '../migrations/1650000000004-UpdateUsersAdditionalInfo.js'),
-        path.join(__dirname, '../migrations/1650000000003-AddVeifiedColumnToUsers')
+        path.join(__dirname, '../migrations/1650000000003-AddVeifiedColumnToUsers'),
+        path.join(__dirname, '../migrations/1690000000004-AddColumnToAdditionalUsersInfo.js')
     ],
 
     migrationsTableName: 'migrations_history',
@@ -110,7 +111,7 @@ const MakeUserIdUniqueInUsersAdditionalInfo = require('../migrations/16900000000
 const AddColumnsToUsers = require('../migrations/1650000000001-AddAuthColumnsToUsers.js')
 // const CreateUsersAdditionalInfo = require('../migrations/1650000000004-UpdateUsersAdditionalInfo.js')
 const AddverifiedColumnsToUsers = require('../migrations/1650000000003-AddVeifiedColumnToUsers')
-
+const AddVerificationAttempYOUSerAdditionalInfo = require('../migrations/1690000000004-AddColumnToAdditionalUsersInfo.js')
 const AppDataSourceWithDirectImports = new DataSource({
     ...migrationConfig,
     migrations: [
@@ -147,7 +148,8 @@ const AppDataSourceWithDirectImports = new DataSource({
         MakeUserIdUniqueInUsersAdditionalInfo,
         AddColumnsToUsers,
         //CreateUsersAdditionalInfo,
-        AddverifiedColumnsToUsers
+        AddverifiedColumnsToUsers,
+        AddVerificationAttempYOUSerAdditionalInfo
     ],
     // ssl: { rejectUnauthorized: false },
 

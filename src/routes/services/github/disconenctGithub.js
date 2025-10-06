@@ -8,10 +8,6 @@ console.log("deleting...")
 router.delete('/', async (req, res) => {
     console.log("deleting github user")
     try {
-           
-          
-
-         
         const userId = req.user.id
 console.log("user id is ", userId)
         if (!userId) {

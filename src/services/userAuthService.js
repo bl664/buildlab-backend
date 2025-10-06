@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const { queryDatabase } = require('./dbQuery');
 
 const MAX_FAILED_ATTEMPTS = parseInt(process.env.MAX_FAILED_ATTEMPTS || '5', 10);
-const LOCKOUT_MINUTES = parseInt(process.env.LOCKOUT_MINUTES || '15', 10);
+const LOCKOUT_MINUTES = parseInt(process.env.LOCKOUT_MINUTES || '5', 10);
 const BCRYPT_SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || '12', 10);
 
 // Fetch auth data (used inside a transaction; includes lockout + refresh token hash)
@@ -13,7 +13,8 @@ const getUserAuthData = async (email, client) => {
        u.password_hash,
        u.failed_login_attempts,
        u.lockout_until,
-       u.refresh_token_hash
+       u.refresh_token_hash,
+       u.verified
 FROM users u
 INNER JOIN messaging_users mu ON u.id = mu.user_id
 WHERE mu.email = $1
@@ -40,19 +41,41 @@ const getUserProfile = async (userId, client= null) => {
 };
 
 const updateFailedLogin = async (user, client) => {
-  const failedAttempts = (user.failed_login_attempts || 0) + 1;
-  let lockoutUntil = null;
-  if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
-    lockoutUntil = new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000).toISOString();
+  try {
+    const failedAttempts = (user.failed_login_attempts || 0) + 1;
+    console.log("failed attempts are", failedAttempts);
+
+    let lockoutUntil = null;
+    if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+      // better: pass Date object, not ISO string
+      lockoutUntil = new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000);
+    }
+    console.log("lockout until", lockoutUntil);
+
+    const query = `
+      UPDATE users
+      SET failed_login_attempts = $1,
+          lockout_until = $2
+      WHERE id = $3
+      RETURNING id, failed_login_attempts, lockout_until
+    `;
+console.log("updating failed_login_attempts...")
+    const result = await queryDatabase(query, [failedAttempts, lockoutUntil, user.id], client);
+
+    if (!result || result.length === 0) {
+      console.warn("⚠️ No rows updated. Check if user.id is correct:", user.id);
+      return null;
+    }
+
+    console.log("✅ update result is", result[0]);
+    return result[0];
+
+  } catch (err) {
+    console.error("❌ Error in updateFailedLogin:", err.message, err.stack);
+    throw err; // rethrow so caller knows it failed
   }
-  const query = `
-    UPDATE users
-    SET failed_login_attempts = $1,
-        lockout_until = $2
-    WHERE id = $3
-  `;
-  await queryDatabase(query, [failedAttempts, lockoutUntil, user.id], client);
 };
+
 
 const resetFailedLogin = async (userId, client) => {
   const query = `

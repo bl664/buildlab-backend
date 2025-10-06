@@ -25,7 +25,7 @@ const getTransactionClient = async () => {
     return client;
   } catch (error) {
     // If BEGIN fails, release the client
-    // client.release();
+    client.release();
     throw error;
   }
 };
@@ -48,12 +48,13 @@ const commitTransaction = async (client) => {
 
 // Helper to safely rollback a transaction
 const rollbackTransaction = async (client) => {
-  try {
-    await client.query('ROLLBACK');
-  } catch (error) {
-    console.error('Failed to rollback transaction', error);
-  } finally {
-    client.release();
+  if (!client.released) {
+    try {
+      await client.query('ROLLBACK');
+    } finally {
+      client.release();
+      client.released = true;  // mark so no double release
+    }
   }
 };
 
