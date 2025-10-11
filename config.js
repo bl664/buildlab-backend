@@ -47,7 +47,8 @@ const APP_CONFIG = {
     EMAIL_PORT: process.env.BL_AUTH_EMAIL_PORT,
     EMAIL_USER: process.env.BL_AUTH_EMAIL_USER,
     EMAIL_PASS: process.env.BL_AUTH_EMAIL_PASS,
-    FRONTEND_URL: process.env.BL_AUTH_FRONTEND_URL
+    FRONTEND_URL: process.env.BL_AUTH_FRONTEND_URL,
+    BL_AUTH_REFRESH_COOKIE_NAME: process.env.BL_AUTH_REFRESH_COOKIE_NAME
 }
 
 module.exports = APP_CONFIG

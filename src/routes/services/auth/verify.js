@@ -24,7 +24,6 @@ router.post('/', async (req, res) => {
 
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
-
     client = await getTransactionClient();
 
     // Verify token

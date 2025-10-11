@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.post('/', async (req, res) => {
   try {
-    const refreshToken = req.cookies?.[APP_CONFIG.BL_AUTH_REFRESH_COOKIE_NAME || 'bl_refresh'];
+    const refreshToken = req.cookies?.[APP_CONFIG.BL_AUTH_REFRESH_COOKIE_NAME];
     if (!refreshToken) return res.status(401).json({ error: 'Refresh token required' });
 
     // Decode and verify JWT

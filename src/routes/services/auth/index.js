@@ -7,6 +7,7 @@ const logout = require('./logout');
 const forgot_password = require('./forgotPassword')
 const reset_password = require('./resetPassword')
 const verifyEmail = require('./verify')
+
 router.use('/signin', signin);
 router.use('/signup', signup);
 router.use('/verify/email', verifyEmail)

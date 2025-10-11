@@ -1,15 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase } = require('../../../services/dbQuery');
-console.log("deleting...")
-//router.use(authMiddleware);
 
 router.delete('/', async (req, res) => {
     console.log("deleting github user")
     try {
         const userId = req.user.id
-console.log("user id is ", userId)
         if (!userId) {
            console.log('User ID is missing in the request');
             return res.status(400).json({ error: 'User ID is required' });

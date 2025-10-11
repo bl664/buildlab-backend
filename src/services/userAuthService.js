@@ -27,7 +27,8 @@ FOR UPDATE
 // Fetch profile for response (only fields that exist)
 const getUserProfile = async (userId, client= null) => {
   const query = `
-    SELECT mu.email,
+    SELECT mu.user_id, 
+          mu.email,
            mu.name,
            mu.role,
            u.created_at,
@@ -106,11 +107,38 @@ const verifyStoredRefreshToken = async (userId, refreshToken, client = null) => 
   return await bcrypt.compare(refreshToken, storedHash);
 };
 
+// userAuthService.js
+
+const replaceRefreshToken = async (userId, oldRefreshToken, newRefreshToken, client = null) => {
+  // First verify the old token matches what's in DB
+  const isValid = await verifyStoredRefreshToken(userId, oldRefreshToken, client);
+  
+  if (!isValid) {
+    // Old token doesn't match - possible token reuse attack!
+    console.error('Token reuse detected for user:', userId);
+    // Revoke all tokens for this user
+    await revokeRefreshToken(userId, client);
+    throw new Error('Invalid refresh token - possible security breach');
+  }
+  
+  // Hash and store the new refresh token
+  const newRefreshTokenHash = await bcrypt.hash(newRefreshToken, BCRYPT_SALT_ROUNDS);
+  const query = `
+    UPDATE users
+    SET refresh_token_hash = $1,
+        refresh_token_updated_at = NOW()
+    WHERE id = $2
+  `;
+  await queryDatabase(query, [newRefreshTokenHash, userId], client);
+  
+  console.log('Refresh token rotated for user:', userId);
+};
+
 module.exports = {
   getUserAuthData,
   getUserProfile,
   updateFailedLogin,
   resetFailedLogin,
   storeRefreshToken,
-  verifyStoredRefreshToken, // exported for refresh endpoint use
+  verifyStoredRefreshToken, 
 };

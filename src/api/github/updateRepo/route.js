@@ -11,7 +11,6 @@ async function updateGitHubRepoName(currentRepoName, newRepoName, user_id) {
             'SELECT github_token, github_user_name FROM github_users WHERE user_id = $1',
             [user_id]
         );
-console.log("tokenResult", tokenResult)
         if (tokenResult.length === 0) {
             throw new Error('GitHub token or username not found for this user.');
         }
@@ -35,12 +34,10 @@ console.log("tokenResult", tokenResult)
         });
 
         const data = await response.json();
-console.log("github repo name updated", data, response, response.ok); 
         if (response.status !== 200) {
             console.error('error Failed to update GitHub repository name');
             throw new Error(data.message || 'Failed to update GitHub repository name.');
         }
-console.log("updated successsfuy")
         return {
             message: 'Repository name updated successfully',
             github_repo_name: data.name,

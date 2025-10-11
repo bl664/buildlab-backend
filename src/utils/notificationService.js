@@ -31,8 +31,11 @@ const sendAndStoreNotification = async (io, recipientId, {
 
     // Emit real-time notification
     const userSocketId = users.get(recipientId);
+    console.log("user socket id is", userSocketId, users, recipientId)
     if (userSocketId && io) {
+
         try {
+            console.log("trying sending request")
             io.to(userSocketId).emit("receiveNotification", {
                 id: savedNotification.id,
                 type: savedNotification.type,

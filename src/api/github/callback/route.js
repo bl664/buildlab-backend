@@ -98,6 +98,8 @@ router.get('/', async (req, res) => {
     const { code } = req.query;
     const { userId, role } = state;
 
+    console.log("role is ", role, userId)
+
     // Validate required parameters
     if (!code) {
       logError('Missing authorization code');

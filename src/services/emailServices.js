@@ -15,13 +15,13 @@ function createTransporter() {
     },
   });
 
-  transporter.verify((err) => {
-    if (err) {
-      console.error("❌ SMTP verification failed:", err.message);
-    } else {
-      console.log("✅ SMTP ready to send emails");
-    }
-  });
+  // transporter.verify((err) => {
+  //   if (err) {
+  //     console.error("❌ SMTP verification failed:", err.message);
+  //   } else {
+  //     console.log("✅ SMTP ready to send emails");
+  //   }
+  // });
 
   return transporter;
 }

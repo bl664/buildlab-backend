@@ -1,7 +1,7 @@
 const { queryDatabase } = require('../../../services/dbQuery');
 
 async function saveGithubUserInfo(data, userId, githubToken) {
-  console.log("saving github user");
+  console.log("saving github user", userId);
 
   try {
     const { id, login, avatar_url, html_url, type, site_admin, public_repos, public_gists,

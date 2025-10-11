@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
     }
 
     const user = result[0];
-
+console.log("fetched user info", user);
     return res.json({
       message: 'fetched',
       result: user,
@@ -37,4 +37,4 @@ router.get('/', async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = router;    

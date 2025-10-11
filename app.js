@@ -5,12 +5,16 @@ const gracefulShutdown = require('http-graceful-shutdown');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const slowDown = require('express-slow-down');
+const { validateCorsConfig } = require('./src/middleware/cors');
+const { validateSecurityConfig } = require('./src//middleware/securityMiddleware');
 
 const APP_CONFIG = require('./config');
 const initializeSocket = require('./src/routes/messages/socket');
 const createApp = require('./src');
 
-// ---------------- Security Config ----------------
+validateCorsConfig();
+validateSecurityConfig();
+
 const helmetMiddleware = helmet({
   contentSecurityPolicy: {
     directives: {
@@ -28,13 +32,13 @@ const helmetMiddleware = helmet({
         APP_CONFIG.CORS_TRUSTED_ORIGIN,
         ...(process.env.NODE_ENV === 'development'
           ? [
-              'http://localhost:3000',
-              'http://127.0.0.1:3000',
-              'http://localhost:3001',
-              'http://127.0.0.1:3001',
-              'http://localhost:3002',
-              'http://127.0.0.1:3002',
-            ]
+            'http://localhost:3000',
+            'http://127.0.0.1:3000',
+            'http://localhost:3001',
+            'http://127.0.0.1:3001',
+            'http://localhost:3002',
+            'http://127.0.0.1:3002',
+          ]
           : []),
       ],
       fontSrc: ["'self'", "https:"],
@@ -48,8 +52,6 @@ const helmetMiddleware = helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 });
 
-// ---------------- Rate & Speed Limiters ----------------
-// ✅ Skip rate limiting for preflight (OPTIONS) and health checks
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -70,16 +72,33 @@ const speedLimiter = slowDown({
   skip: (req) => req.method === 'OPTIONS',
 });
 
-// ---------------- Clustering ----------------
 if (cluster.isPrimary && process.env.NODE_ENV === 'production') {
   const numCPUs = os.cpus().length;
   console.log(`Master ${process.pid} running with ${numCPUs} workers`);
 
   for (let i = 0; i < numCPUs; i++) cluster.fork();
 
-  cluster.on('exit', (worker) => {
-    console.error(`Worker ${worker.process.pid} died. Restarting...`);
-    cluster.fork();
+  let restartCount = 0;
+  const MAX_RESTARTS = 5;
+  const RESTART_WINDOW = 60000; // 1 minute
+
+  cluster.on('exit', (worker, code, signal) => {
+    console.error(`Worker ${worker.process.pid} died (${signal || code})`);
+
+    restartCount++;
+
+    if (restartCount > MAX_RESTARTS) {
+      console.error('Too many restarts, shutting down master');
+      process.exit(1);
+    }
+
+    setTimeout(() => {
+      console.log('Restarting worker...');
+      cluster.fork();
+    }, 1000);
+
+    // Reset counter after window
+    setTimeout(() => restartCount = 0, RESTART_WINDOW);
   });
 } else {
   const app = createApp({
@@ -95,7 +114,6 @@ if (cluster.isPrimary && process.env.NODE_ENV === 'production') {
   const io = initializeSocket(server);
   app.set('io', io);
 
-  // ---------------- Graceful Shutdown ----------------
   process.on('SIGTERM', () => {
     console.log('SIGTERM received, shutting down gracefully');
     gracefulShutdown(server, {

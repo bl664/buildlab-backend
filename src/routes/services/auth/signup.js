@@ -56,9 +56,9 @@ console.log("formData", req.body.formData)
     if (name.trim().length < 2 || name.trim().length > 100) {
       return res.status(400).json({ error: 'Name must be between 2 and 100 characters' });
     }
-    // if (password.length < 8) {
-    //   return res.status(400).json({ error: 'Password must be at least 8 characters' });
-    // }
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
 
     // 2. Rate limiting
     const rateLimitCheck = checkRateLimit(email);

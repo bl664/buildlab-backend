@@ -89,7 +89,6 @@ router.post('/', async (req, res) => {
             return;
         }
 
-
         const insertQuery = `
             INSERT INTO student_group_requests (student_id, group_id, status, requested_at) 
             VALUES ($1, $2, $3, $4) RETURNING *;

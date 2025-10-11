@@ -1,11 +1,8 @@
-// Create routes for mentor to approve/reject requests
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../../../middleware/auth');
 const { queryDatabase } = require('../../../services/dbQuery');
 const { sendAndStoreNotification } = require('../../../utils/notificationService');
 
-//router.use(authMiddleware);
 
 router.post('/', async (req, res) => {
     const mentor_id = req.user.id;

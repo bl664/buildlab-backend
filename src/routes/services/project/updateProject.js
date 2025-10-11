@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { queryDatabase, getTransactionClient } = require('../../../services/dbQuery');
+const { queryDatabase, getTransactionClient, commitTransaction, rollbackTransaction } = require('../../../services/dbQuery');
 const { updateGitHubRepoName } = require('../../../api/github/updateRepo/route');
 const { sendAndStoreNotification } = require('../../../utils/notificationService');
 
@@ -14,7 +14,7 @@ router.put('/', async (req, res) => {
     }
 
     const io = req.app.get('io');
-
+let client;
     try {
         const { id, updates } = req.body;
 
@@ -35,7 +35,7 @@ router.put('/', async (req, res) => {
             return res.status(400).json({ error: 'students must be an array' });
         }
 
-        let client = await getTransactionClient();
+        client = await getTransactionClient();
 
         // Fetch project creator and assigned students
         const accessCheckQuery = `
@@ -59,8 +59,7 @@ router.put('/', async (req, res) => {
         const accessResult = await queryDatabase(accessCheckQuery, [id, user_id], client);
 
         if (!accessResult || accessResult.length === 0) {
-            await client.query('ROLLBACK');
-            client.release();
+            await rollbackTransaction(client);
             return res.status(403).json({ error: 'Unauthorized: Access denied to update this project' });
         }
 
@@ -69,8 +68,7 @@ router.put('/', async (req, res) => {
             const currentProjectResult = await queryDatabase(currentProjectQuery, [id], client);
 
             if (currentProjectResult.length === 0) {
-                await client.query('ROLLBACK');
-                client.release();
+                await rollbackTransaction(client);
                 return res.status(404).json({ error: 'Project not found' });
             }
 
@@ -84,11 +82,13 @@ router.put('/', async (req, res) => {
             };
 
             if (name && name.trim() !== currentProjectName) {
+                if (user_id === projectCreatorId) {
+
                 const updateRepoResponse = await updateGitHubRepoName(currentRepoName, newRepoName, user_id);
 
                 if (!updateRepoResponse || !updateRepoResponse?.github_repo_name || !updateRepoResponse?.github_repo_url) {
-                    await client.query('ROLLBACK');
-                    client.release();
+                    await rollbackTransaction(client);
+                   
 
                     console.error('Failed to update GitHub repository name');
                     return res.status(500).json({ error: 'Failed to update GitHub repository name' });
@@ -98,6 +98,7 @@ router.put('/', async (req, res) => {
                     github_repo_name: updateRepoResponse?.github_repo_name,
                     github_repo_url: updateRepoResponse?.github_repo_url
                 };
+            }
             }
 
             const newName = name !== undefined ? name.trim() : currentProjectName;
@@ -142,8 +143,8 @@ router.put('/', async (req, res) => {
             const updateResult = await queryDatabase(updateQuery, updateValues, client);
 
             if (!updateResult || updateResult.length === 0) {
-                await client.query('ROLLBACK');
-                client.release();
+                await rollbackTransaction(client);
+               
                 return res.status(404).json({ error: 'Project not found after update' });
             }
 
@@ -204,15 +205,15 @@ router.put('/', async (req, res) => {
             } catch (notifyErr) {
             }
             await client.query('COMMIT');
-            client.release();
+           
 
             return res.json({
                 message: 'Project updated successfully',
                 project: updatedProject
             });
         } catch (txErr) {
-            try { await client.query('ROLLBACK'); } catch (e) { /* ignore */ }
-            client.release();
+            try { await rollbackTransaction(client); } catch (e) { /* ignore */ }
+           
 
             console.error('Transaction error while updating project:', txErr);
             return res.status(500).json({ error: 'Failed to update project', details: txErr.message });

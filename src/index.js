@@ -16,12 +16,14 @@ function createApp({ helmetMiddleware, generalLimiter, authLimiter, speedLimiter
   // Compression
   app.use(compression());
 
+  // CORS
+app.use(corsMiddleware);
   // Rate limiting
   app.use(generalLimiter);
   app.use(speedLimiter);
 
-  // CORS
-  app.use(corsMiddleware);
+  
+  
 
   // Body parsers
   app.use(

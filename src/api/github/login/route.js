@@ -3,10 +3,10 @@ const router = express.Router();
 const APP_CONFIG = require('../../../../config')
 
 router.get('/', (req, res) => {
-  console.log("creating user...")
+  
   const userId = req.query.userId;
   const role = req.query.role;
-
+console.log("creating user...", userId, role)
   if (!userId) {
     console.log("missing user Id")
     return res.status(400).send('Missing userId');

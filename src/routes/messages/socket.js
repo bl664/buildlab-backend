@@ -7,7 +7,6 @@ const jwt = require("jsonwebtoken");
 const users = new Map(); // userId -> socketId
 const activeChats = new Map();
 
-console.log("active chats are", activeChats)
 console.log("Initializing socket...");
 
 const initializeSocket = (server) => {
@@ -22,19 +21,16 @@ const initializeSocket = (server) => {
 
   io.on("connection", async (socket) => {
     let userId = null;
-
     // Parse and verify JWT from cookie
     if (socket.handshake.headers.cookie) {
       const cookies = cookie.parse(socket.handshake.headers.cookie);
-      const userToken = cookies['bl_auth'];
-
+      const userToken = cookies[APP_CONFIG.BL_AUTH_COOKIE_NAME];
       if (userToken) {
         try {
           const decoded = jwt.verify(userToken, APP_CONFIG.BL_AUTH_SECRET_KEY);
           userId = decoded.userId;
-
+// console.log(`User ${userId} connected via socket.`);
           users.set(userId, socket.id);
-          console.log(`User ${userId} connected.`);
 
           // ✅ Send existing unread counts when user connects
           await sendExistingUnreadCounts(socket, userId);
@@ -105,7 +101,7 @@ const initializeSocket = (server) => {
 
         const totalCount = parseInt(result[0]?.count || 0);
 
-        console.log(`📊 Total unread count for user ${userId}: ${totalCount}`);
+        // console.log(`📊 Total unread count for user ${userId}: ${totalCount}`);
 
         if (callback) {
           callback({ totalCount });
@@ -186,7 +182,6 @@ console.log("message is ", senderId, receiverId, message.trim())
 
     socket.on("activeChat", ({ peerId }) => {
       activeChats.set(userId, peerId);
-      console.log("active chats are", activeChats)
     });
 
     socket.on("inactiveChat", ({ peerId }) => {

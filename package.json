@@ -4,11 +4,12 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "nodemon app.js",
+    "server": "app.js",
     "migrate:run": "node scripts/migrate.js run",
     "migrate:revert": "node scripts/migrate.js revert",
     "migrate:status": "node scripts/migrate.js status",
     "db:health": "node scripts/health-check.js"
+    
   },
   "keywords": [],
   "author": "",

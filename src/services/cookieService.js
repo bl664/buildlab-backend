@@ -1,42 +1,15 @@
 // services/cookieService.js
 const APP_CONFIG = require('../../config');
 
-const setAuthCookies = (res, accessToken, refreshToken) => {
-  const baseOptions = {
-    httpOnly: APP_CONFIG.BL_AUTH_COOKIE_HTTP_ONLY, //true
-    secure:  true,
-    sameSite: 'none',
-    domain: APP_CONFIG.BL_AUTH_COOKIE_ALLOWED_DOMAIN,  // .thebuildlab.app
-    maxAge: APP_CONFIG.BL_AUTH_COOKIE_MAXAGE, // 86400000
-    path: '/',
-  };
-
-  // Access token (short lived)
-  res.cookie(APP_CONFIG.BL_AUTH_COOKIE_NAME , accessToken, {
-    ...baseOptions
-  });
-
-  // Refresh token (long lived)
-  res.cookie(APP_CONFIG.BL_AUTH_REFRESH_COOKIE_NAME || 'bl_refresh', refreshToken, {
-    ...baseOptions,
-    maxAge: parseInt(APP_CONFIG.BL_AUTH_REFRESH_COOKIE_MAXAGE || (7 * 24 * 60 * 60 * 1000), 10),
-  });
-};
-
-module.exports = { setAuthCookies };
-
-
 // const setAuthCookies = (res, accessToken, refreshToken) => {
-//   console.log('auth', APP_CONFIG.BL_AUTH_COOKIE_HTTP_ONLY, process.env.NODE_ENV === 'production', APP_CONFIG.BL_AUTH_COOKIE_MAXAGE)
-
 //   const baseOptions = {
-//   httpOnly: true,
-//   secure: process.env.NODE_ENV === 'production',
-//   sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
-//   domain: process.env.NODE_ENV === 'production' ? '.thebuildlab.app' : undefined,
-//   maxAge: 86400000,
-//   path: '/',
-// };
+//     httpOnly: APP_CONFIG.BL_AUTH_COOKIE_HTTP_ONLY, //true
+//     secure:  true,
+//     sameSite: 'none',
+//     domain: APP_CONFIG.BL_AUTH_COOKIE_ALLOWED_DOMAIN,  // .thebuildlab.app
+//     maxAge: APP_CONFIG.BL_AUTH_COOKIE_MAXAGE, // 86400000
+//     path: '/',
+//   };
 
 //   // Access token (short lived)
 //   res.cookie(APP_CONFIG.BL_AUTH_COOKIE_NAME , accessToken, {
@@ -44,13 +17,40 @@ module.exports = { setAuthCookies };
 //   });
 
 //   // Refresh token (long lived)
-//   res.cookie(APP_CONFIG.BL_AUTH_REFRESH_COOKIE_NAME || 'bl_refresh', refreshToken, {
+//   res.cookie(APP_CONFIG.BL_AUTH_REFRESH_COOKIE_NAME , refreshToken, {
 //     ...baseOptions,
 //     maxAge: parseInt(APP_CONFIG.BL_AUTH_REFRESH_COOKIE_MAXAGE || (7 * 24 * 60 * 60 * 1000), 10),
 //   });
 // };
 
 // module.exports = { setAuthCookies };
+
+
+const setAuthCookies = (res, accessToken, refreshToken) => {
+  // console.log('auth', APP_CONFIG.BL_AUTH_COOKIE_HTTP_ONLY, process.env.NODE_ENV === 'production', APP_CONFIG.BL_AUTH_COOKIE_MAXAGE)
+
+  const baseOptions = {
+  httpOnly: APP_CONFIG.BL_AUTH_COOKIE_HTTP_ONLY,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+  domain: process.env.NODE_ENV === 'production' ? '.thebuildlab.app' : undefined,
+  maxAge: 86400000,
+  path: '/',
+};
+
+  // Access token (short lived)
+  res.cookie(APP_CONFIG.BL_AUTH_COOKIE_NAME , accessToken, {
+    ...baseOptions
+  });
+
+  // Refresh token (long lived)
+  res.cookie(APP_CONFIG.BL_AUTH_REFRESH_COOKIE_NAME, refreshToken, {
+    ...baseOptions,
+    maxAge: parseInt(APP_CONFIG.BL_AUTH_REFRESH_COOKIE_MAXAGE || (7 * 24 * 60 * 60 * 1000), 10),
+  });
+};
+
+module.exports = { setAuthCookies };
 
 
 // const APP_CONFIG = require('../../config');
