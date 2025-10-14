@@ -67,7 +67,8 @@ function isOriginAllowed(origin) {
         if (
           hostname === 'localhost' ||
           hostname === '127.0.0.1' ||
-          hostname === '[::1]'
+          hostname === '[::1]' ||
+          hostname === '192.168.68.105'
         ) {
           return true;
         }
