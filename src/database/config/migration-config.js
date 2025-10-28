@@ -48,7 +48,8 @@ const migrationConfig = {
         path.join(__dirname, '../migrations/1650000000001-AddAuthColumnsToUsers.js'),
         //path.join(__dirname, '../migrations/1650000000004-UpdateUsersAdditionalInfo.js'),
         path.join(__dirname, '../migrations/1650000000003-AddVeifiedColumnToUsers'),
-        path.join(__dirname, '../migrations/1690000000004-AddColumnToAdditionalUsersInfo.js')
+        path.join(__dirname, '../migrations/1690000000004-AddColumnToAdditionalUsersInfo.js'),
+        path.join(__dirname, '../migrations/1690000000005-CreateStudentGroupProjectsTable.js')
     ],
 
     migrationsTableName: 'migrations_history',
@@ -112,6 +113,8 @@ const AddColumnsToUsers = require('../migrations/1650000000001-AddAuthColumnsToU
 // const CreateUsersAdditionalInfo = require('../migrations/1650000000004-UpdateUsersAdditionalInfo.js')
 const AddverifiedColumnsToUsers = require('../migrations/1650000000003-AddVeifiedColumnToUsers')
 const AddVerificationAttempYOUSerAdditionalInfo = require('../migrations/1690000000004-AddColumnToAdditionalUsersInfo.js')
+const CreateStudentGroupProjectsTable = require('../migrations/1690000000005-CreateStudentGroupProjectsTable.js');
+
 const AppDataSourceWithDirectImports = new DataSource({
     ...migrationConfig,
     migrations: [
@@ -149,7 +152,8 @@ const AppDataSourceWithDirectImports = new DataSource({
         AddColumnsToUsers,
         //CreateUsersAdditionalInfo,
         AddverifiedColumnsToUsers,
-        AddVerificationAttempYOUSerAdditionalInfo
+        AddVerificationAttempYOUSerAdditionalInfo,
+        CreateStudentGroupProjectsTable
     ],
     // ssl: { rejectUnauthorized: false },
 

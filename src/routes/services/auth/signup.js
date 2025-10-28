@@ -7,17 +7,13 @@ const { queryDatabase, getTransactionClient, rollbackTransaction, commitTransact
 const { checkUnverifiedAccount, deleteExpiredUnverifiedAccounts } = require('../../../services/userVerifyService');
 const emailService = require('../../../services/emailServices');
 const APP_CONFIG = require('../../../../config');
+const { generateAccessToken } = require('../../../utils/tokenManager');
 
 const router = express.Router();
 
-// Rate limiting map (in production, use Redis)
 const signupAttempts = new Map();
-const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000; 
 const MAX_SIGNUP_ATTEMPTS = 5;
-
-function generateVerificationToken() {
-  return crypto.randomBytes(32).toString('hex');
-}
 
 function hashToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
@@ -43,9 +39,10 @@ function checkRateLimit(email) {
 
 router.post('/', async (req, res) => {
   let client;
+
   try {
     const { email, password, name } = req.body.formData || {};
-console.log("formData", req.body.formData)
+
     // 1. Validate input
     if (!email || !password || !name) {
       return res.status(400).json({ error: 'Email, password, and name are required' });
@@ -78,7 +75,7 @@ console.log("formData", req.body.formData)
 
     // 5. Check if account exists
     const existingAccount = await checkUnverifiedAccount(email, client);
-
+ const payload = { email: email };
     if (existingAccount) {
       // Account exists and is VERIFIED
       if (existingAccount.verified) {
@@ -97,7 +94,7 @@ console.log("formData", req.body.formData)
 
       if (tokenExpired) {
         // Token expired - resend with new token
-        const newToken = generateVerificationToken();
+        const newToken = generateAccessToken(payload);
         const newTokenHash = hashToken(newToken);
         const newExpiry = new Date(Date.now() + 15 * 60 * 1000);
 
@@ -132,7 +129,8 @@ console.log("formData", req.body.formData)
           await emailService.sendVerificationEmail(
             email, 
             newToken, 
-            `${APP_CONFIG.DEFAULT_REDIRECT_URL}/verify/email?token=${newToken}`
+            `${APP_CONFIG.DEFAULT_REDIRECT_URL}/verify/email?token=${newToken}`,
+            name.trim()
           );
         } catch (err) {
           console.error('Email send failed:', err.message);
@@ -186,11 +184,13 @@ console.log("formData", req.body.formData)
       VALUES ($1, $2)
       RETURNING id, created_at
     `;
+
     const [newUser] = await queryDatabase(usersInsertQuery, [hashedPassword, false], client);
     if (!newUser) throw new Error('Failed to create user record');
 
     // 7. Additional info with verification token
-    const verificationToken = generateVerificationToken();
+   
+    const verificationToken = generateAccessToken(payload);
     const verificationTokenHash = hashToken(verificationToken);
     const expiry = new Date(Date.now() + 15 * 60 * 1000);
 
@@ -234,10 +234,8 @@ console.log("formData", req.body.formData)
     } catch (err) {
       console.error('Email send failed:', err.message);
     }
-console.log("commitinging client")
     // 10. Commit transaction
     await commitTransaction(client);
-console.log("Registration successful!")
     return res.status(201).json({
       message: 'Registration successful! Please check your email to verify your account.',
       action: 'check_email'

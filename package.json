@@ -8,8 +8,8 @@
     "migrate:run": "node scripts/migrate.js run",
     "migrate:revert": "node scripts/migrate.js revert",
     "migrate:status": "node scripts/migrate.js status",
-    "db:health": "node scripts/health-check.js"
-    
+    "db:health": "node scripts/health-check.js",
+    "dev": "nodemon app.js"
   },
   "keywords": [],
   "author": "",
@@ -30,6 +30,7 @@
     "helmet": "^8.1.0",
     "http-graceful-shutdown": "^3.1.14",
     "jsonwebtoken": "^9.0.2",
+    "mailersend": "^2.6.0",
     "nodemailer": "^7.0.6",
     "nodemon": "^3.1.7",
     "path": "^0.12.7",

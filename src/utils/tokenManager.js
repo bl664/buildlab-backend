@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const APP_CONFIG = require('../../config');
 
 const generateAccessToken = (payload) => {
+  console.log("payload is ", payload)
   return jwt.sign(payload, APP_CONFIG.SECRET_KEY, { expiresIn: APP_CONFIG.ACCESS_TOKEN_EXPIRES || '30d' });
 };
 

@@ -29,3 +29,5 @@ class AddColumnAndIndexesToUsersInfo1690000000004 {
 }
 
 module.exports = AddColumnAndIndexesToUsersInfo1690000000004;
+
+
