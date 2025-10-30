@@ -2,7 +2,7 @@ const { config } = require('dotenv');
 const path = require('path');
 
 // Determine which .env file to load based on NODE_ENV
-let envFileName = '.env.production'; // Default to development
+let envFileName = '.env.development'; // Default to development
 if (process.env.NODE_ENV === 'production') {
     console.log('Loading .env.production');
     envFileName = '.env.production';

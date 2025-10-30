@@ -11,6 +11,13 @@ const { validateSecurityConfig } = require('./src//middleware/securityMiddleware
 const APP_CONFIG = require('./config');
 const initializeSocket = require('./src/routes/messages/socket');
 const createApp = require('./src');
+const emailService = require('./src/services/emailServices');
+
+async function abc() {
+  await emailService.sendGroupJoinedConfirmation('sharmajivinay9@gmail.com', 'Vinay', 'CodeCrafters: Full-Stack Innovators');
+}
+// 
+
 
 validateCorsConfig();
 validateSecurityConfig();

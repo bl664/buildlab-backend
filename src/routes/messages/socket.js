@@ -10,39 +10,112 @@ const activeChats = new Map();
 console.log("Initializing socket...");
 
 const initializeSocket = (server) => {
+  // const io = new Server(server, {
+  //   cookie: true,
+  //   cors: {
+  //     origin: [APP_CONFIG.MENTOR_REDIRECT_URL_SUCCESS, APP_CONFIG.DEFAULT_REDIRECT_URL, APP_CONFIG.STUDENT_REDIRECT_URL_SUCCESS],
+  //     methods: ["GET", "POST"],
+  //     credentials: true,
+  //   },
+  // });
+
   const io = new Server(server, {
-    cookie: true,
-    cors: {
-      origin: [APP_CONFIG.MENTOR_REDIRECT_URL_SUCCESS, APP_CONFIG.DEFAULT_REDIRECT_URL, APP_CONFIG.STUDENT_REDIRECT_URL_SUCCESS],
-      methods: ["GET", "POST"],
-      credentials: true,
+  cookie: true,
+  cors: {
+    origin: function(origin, callback) {
+      // Allow requests with no origin (mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+      
+      const allowedOrigins = [
+        APP_CONFIG.MENTOR_REDIRECT_URL_SUCCESS, 
+        APP_CONFIG.DEFAULT_REDIRECT_URL, 
+        APP_CONFIG.STUDENT_REDIRECT_URL_SUCCESS,
+      ];
+      
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.error(`Socket CORS blocked origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
     },
-  });
+    methods: ["GET", "POST"],
+    credentials: true,
+    allowedHeaders: ["content-type"]
+  },
+  // Allow polling as fallback
+  transports: ['websocket', 'polling'],
+  pingTimeout: 60000,
+  pingInterval: 25000
+});
 
   io.on("connection", async (socket) => {
-    let userId = null;
-    // Parse and verify JWT from cookie
-    if (socket.handshake.headers.cookie) {
-      const cookies = cookie.parse(socket.handshake.headers.cookie);
+    
+console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`🔌 New Socket Connection`);
+  console.log(`📍 Socket ID: ${socket.id}`);
+  console.log(`🌐 Origin: ${socket.handshake.headers.origin}`);
+  console.log(`🚀 Transport: ${socket.conn.transport.name}`);
+  console.log(`🔒 Secure: ${socket.handshake.secure}`);
+  
+  let userId = null;
+
+  // Check for cookies
+  const cookieHeader = socket.handshake.headers.cookie;
+  console.log(`🍪 Raw Cookie Header: ${cookieHeader || 'MISSING'}`);
+
+  if (cookieHeader) {
+    try {
+      const cookies = cookie.parse(cookieHeader);
+      console.log(`🍪 Parsed Cookie Keys:`, Object.keys(cookies));
+      console.log(`🔍 Looking for cookie: "${APP_CONFIG.BL_AUTH_COOKIE_NAME}"`);
+      
       const userToken = cookies[APP_CONFIG.BL_AUTH_COOKIE_NAME];
+      
       if (userToken) {
+        console.log(`✅ Auth cookie found, length: ${userToken.length}`);
+        
         try {
           const decoded = jwt.verify(userToken, APP_CONFIG.BL_AUTH_SECRET_KEY);
           userId = decoded.userId;
-// console.log(`User ${userId} connected via socket.`);
+          console.log(`✅ JWT verified, User ID: ${userId}`);
+          
           users.set(userId, socket.id);
-
-          // ✅ Send existing unread counts when user connects
           await sendExistingUnreadCounts(socket, userId);
-
-          // Notify all users that this user is online
-          // const allUsers = await getAllUsers();
-          // notifyUsersStatus(io, allUsers.filter(id => id !== userId), userId, true);
-        } catch (err) {
-          console.error("Invalid token:", err.message);
+          
+          // Emit success to client
+          socket.emit('authenticated', { userId });
+        } catch (jwtErr) {
+          console.error(`❌ JWT verification failed: ${jwtErr.message}`);
+          socket.emit('authError', { message: 'Invalid token' });
         }
+      } else {
+        console.error(`❌ Cookie "${APP_CONFIG.BL_AUTH_COOKIE_NAME}" not found`);
+        console.error(`❌ Available cookies: ${Object.keys(cookies).join(', ')}`);
+        socket.emit('authError', { message: 'Auth cookie missing' });
       }
+    } catch (parseErr) {
+      console.error(`❌ Cookie parsing failed: ${parseErr.message}`);
+      socket.emit('authError', { message: 'Cookie parse error' });
     }
+  } else {
+    console.error('❌ No cookie header in request');
+    console.error('📋 All headers:', JSON.stringify(socket.handshake.headers, null, 2));
+    socket.emit('authError', { message: 'No cookies received' });
+  }
+
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
+    if (!userId) {
+    console.log('⚠️ Disconnecting unauthenticated socket');
+    socket.disconnect();
+    return;
+  }
+
+  // Add error handler
+  socket.on("error", (error) => {
+    console.error(`❌ Socket error for user ${userId}:`, error);
+  });
 
     // ✅ NEW: Send existing unread message counts to the user
     socket.on("requestUnreadCounts", async ({ userId }) => {
@@ -120,65 +193,155 @@ const initializeSocket = (server) => {
       callback({ userId: targetId, isOnline });
     });
 
+//     socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
+//       try {
+//         if (!message || !message.trim()) return;
+// console.log("message is ", senderId, receiverId, message.trim())
+//         const result = await queryDatabase(
+//           `INSERT INTO messages (sender_id, receiver_id, message, status) 
+//        VALUES ($1, $2, $3, $4) RETURNING id, created_at`,
+//           [senderId, receiverId, message.trim(), "sent"]
+//         );
+
+//         const messageData = result[0];
+//         const messageId = messageData?.id;
+//         if (!messageId) return;
+
+//         const receiverSocketId = users.get(receiverId);
+
+//         if (receiverSocketId) {
+//           // send to receiver
+//           io.to(receiverSocketId).emit("receiveMessage", {
+//             id: messageId,
+//             senderId,
+//             message: message.trim(),
+//             timestamp: messageData.created_at
+//           });
+
+//           // check if receiver has this chat open
+//           const isActiveChat = activeChats.get(receiverId) === senderId;
+
+//           if (isActiveChat) {
+//             // update to READ
+//             await queryDatabase("UPDATE messages SET status = $1 WHERE id = $2", ["read", messageId]);
+
+//             // notify sender instantly
+//             const senderSocketId = users.get(senderId);
+//             if (senderSocketId) {
+//               io.to(senderSocketId).emit("messagesRead", {
+//                 peerId: receiverId,
+//                 all: true // bulk update locally
+//               });
+//             }
+//           } else {
+//             // normal DELIVERED
+//             await queryDatabase("UPDATE messages SET status = $1 WHERE id = $2", ["delivered", messageId]);
+
+//             const senderSocketId = users.get(senderId);
+//             if (senderSocketId) {
+//               io.to(senderSocketId).emit("messagesDelivered", {
+//                 peerId: receiverId,
+//                 all: true
+//               });
+//             }
+//           }
+//         } else {
+//           console.log(`📵 User ${receiverId} offline; stored for later`);
+//         }
+//       } catch (err) {
+//         console.error("sendMessage error:", err.message);
+//       }
+//     });
+
     socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
-      try {
-        if (!message || !message.trim()) return;
-console.log("message is ", senderId, receiverId, message.trim())
-        const result = await queryDatabase(
-          `INSERT INTO messages (sender_id, receiver_id, message, status) 
-       VALUES ($1, $2, $3, $4) RETURNING id, created_at`,
-          [senderId, receiverId, message.trim(), "sent"]
-        );
+    // Validate senderId matches authenticated userId
+    if (senderId !== userId) {
+      console.error(`❌ SenderId mismatch: ${senderId} !== ${userId}`);
+      socket.emit("messageError", { error: "Unauthorized" });
+      return;
+    }
 
-        const messageData = result[0];
-        const messageId = messageData?.id;
-        if (!messageId) return;
+    console.log(`📨 Message: ${senderId} -> ${receiverId}: "${message.substring(0, 50)}..."`);
+    
+    try {
+      if (!message || !message.trim()) {
+        console.error("❌ Empty message");
+        socket.emit("messageError", { error: "Message cannot be empty" });
+        return;
+      }
 
-        const receiverSocketId = users.get(receiverId);
+      const result = await queryDatabase(
+        `INSERT INTO messages (sender_id, receiver_id, message, status) 
+         VALUES ($1, $2, $3, $4) RETURNING id, created_at`,
+        [senderId, receiverId, message.trim(), "sent"]
+      );
 
-        if (receiverSocketId) {
-          // send to receiver
-          io.to(receiverSocketId).emit("receiveMessage", {
-            id: messageId,
-            senderId,
-            message: message.trim(),
-            timestamp: messageData.created_at
-          });
+      if (!result || result.length === 0) {
+        console.error("❌ Database insert failed");
+        socket.emit("messageError", { error: "Failed to save message" });
+        return;
+      }
 
-          // check if receiver has this chat open
-          const isActiveChat = activeChats.get(receiverId) === senderId;
+      const messageData = result[0];
+      const messageId = messageData?.id;
+      
+      console.log(`✅ Message saved with ID: ${messageId}`);
 
-          if (isActiveChat) {
-            // update to READ
-            await queryDatabase("UPDATE messages SET status = $1 WHERE id = $2", ["read", messageId]);
+      const receiverSocketId = users.get(receiverId);
 
-            // notify sender instantly
-            const senderSocketId = users.get(senderId);
-            if (senderSocketId) {
-              io.to(senderSocketId).emit("messagesRead", {
-                peerId: receiverId,
-                all: true // bulk update locally
-              });
-            }
-          } else {
-            // normal DELIVERED
-            await queryDatabase("UPDATE messages SET status = $1 WHERE id = $2", ["delivered", messageId]);
+      if (receiverSocketId) {
+        console.log(`📤 Delivering to receiver socket: ${receiverSocketId}`);
+        
+        io.to(receiverSocketId).emit("receiveMessage", {
+          id: messageId,
+          senderId,
+          message: message.trim(),
+          timestamp: messageData.created_at,
+          status: 'delivered'
+        });
 
-            const senderSocketId = users.get(senderId);
-            if (senderSocketId) {
-              io.to(senderSocketId).emit("messagesDelivered", {
-                peerId: receiverId,
-                all: true
-              });
-            }
+        const isActiveChat = activeChats.get(receiverId) === senderId;
+
+        if (isActiveChat) {
+          console.log(`👀 Receiver has chat open, marking as read`);
+          await queryDatabase("UPDATE messages SET status = $1 WHERE id = $2", ["read", messageId]);
+          
+          const senderSocketId = users.get(senderId);
+          if (senderSocketId) {
+            io.to(senderSocketId).emit("messagesRead", {
+              peerId: receiverId,
+              all: true
+            });
           }
         } else {
-          console.log(`📵 User ${receiverId} offline; stored for later`);
+          console.log(`📬 Receiver chat not active, marking as delivered`);
+          await queryDatabase("UPDATE messages SET status = $1 WHERE id = $2", ["delivered", messageId]);
+          
+          const senderSocketId = users.get(senderId);
+          if (senderSocketId) {
+            io.to(senderSocketId).emit("messagesDelivered", {
+              peerId: receiverId,
+              all: true
+            });
+          }
         }
-      } catch (err) {
-        console.error("sendMessage error:", err.message);
+      } else {
+        console.log(`📵 Receiver ${receiverId} is offline`);
       }
-    });
+      
+      // Confirm to sender
+      socket.emit("messageSent", { 
+        messageId, 
+        timestamp: messageData.created_at 
+      });
+      
+    } catch (err) {
+      console.error("❌ sendMessage error:", err.message);
+      console.error(err.stack);
+      socket.emit("messageError", { error: "Failed to send message" });
+    }
+  });
+
 
     socket.on("activeChat", ({ peerId }) => {
       activeChats.set(userId, peerId);
@@ -383,16 +546,25 @@ console.log("message is ", senderId, receiverId, message.trim())
     });
 
     // Handle disconnection
-    socket.on("disconnect", async () => {
-      if (userId) {
-        users.delete(userId);
-        activeChats.delete(userId)
-        console.log(`User ${userId} disconnected and activeChats deleted.`);
+    // socket.on("disconnect", async () => {
+    //   if (userId) {
+    //     users.delete(userId);
+    //     activeChats.delete(userId)
+    //     console.log(`User ${userId} disconnected and activeChats deleted.`);
 
-        // const allUsers = await getAllUsers();
-        // notifyUsersStatus(io, allUsers.filter(id => id !== userId), userId, false);
-      }
-    });
+    //     // const allUsers = await getAllUsers();
+    //     // notifyUsersStatus(io, allUsers.filter(id => id !== userId), userId, false);
+    //   }
+    // });
+
+      socket.on("disconnect", async (reason) => {
+    console.log(`🔌 User ${userId} disconnected: ${reason}`);
+    if (userId) {
+      users.delete(userId);
+      activeChats.delete(userId);
+    }
+  });
+
   });
 
   return io;

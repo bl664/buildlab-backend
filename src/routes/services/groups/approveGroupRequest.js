@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { queryDatabase } = require('../../../services/dbQuery');
 const { sendAndStoreNotification } = require('../../../utils/notificationService');
-
+const emailService = require('../../../services/emailServices');
 
 router.post('/', async (req, res) => {
     const mentor_id = req.user.id;
@@ -74,6 +74,16 @@ router.post('/', async (req, res) => {
             });
 
             await queryDatabase('COMMIT');
+
+            const studentDetailsQuery = await queryDatabase(`
+                SELECT name, email 
+                FROM messaging_users 
+                WHERE user_id = $1
+            `, [request.student_id]);
+
+            const studentDetails = studentDetailsQuery[0];
+console.log("Student Details:", studentDetails);
+            await emailService.sendGroupJoinedConfirmation(studentDetails.email, studentDetails.name, request.group_name);
 
             res.json({ message: 'Request approved successfully' });
         } catch (error) {

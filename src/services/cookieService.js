@@ -27,8 +27,6 @@ const APP_CONFIG = require('../../config');
 
 
 const setAuthCookies = (res, accessToken, refreshToken) => {
-  // console.log('auth', APP_CONFIG.BL_AUTH_COOKIE_HTTP_ONLY, process.env.NODE_ENV === 'production', APP_CONFIG.BL_AUTH_COOKIE_MAXAGE)
-
   const baseOptions = {
   httpOnly: APP_CONFIG.BL_AUTH_COOKIE_HTTP_ONLY,
   secure: process.env.NODE_ENV === 'production',

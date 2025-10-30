@@ -8,7 +8,7 @@ const mailerSend = new MailerSend({
 const sentFrom = new Sender("noreply@thebuildlab.app", "BuildLab Team");
 
 const emailService = {
-    sendVerificationEmail: async (email, token, url, name = "there") => {
+  sendVerificationEmail: async (email, token, url, name = "there") => {
     try {
       const recipients = [new Recipient(email)];
 
@@ -41,7 +41,6 @@ const emailService = {
       throw err;
     }
   },
-
 
   sendPasswordResetEmail: async (email, token, resetUrl) => {
     const recipients = [new Recipient(email)];
@@ -153,6 +152,37 @@ const emailService = {
       console.error(`❌ Failed to send email update notification:`, err.message);
     }
   },
+
+  sendGroupJoinedConfirmation: async (email, user_name, group_name) => {
+     try {
+      const recipients = [new Recipient(email)];
+      const personalization = [
+        {
+          email,
+          data: {
+            user_name,
+          group_name,
+          }
+        },
+      ];
+      console.log("personalized", personalization)
+
+      // ✅ Use your MailerSend template ID here
+      const emailParams = new EmailParams()
+        .setFrom(sentFrom)
+        .setTo(recipients)
+        .setSubject("You've Joined a New Group - BuildLab")
+        .setTemplateId("x2p0347o7vkgzdrn")
+        .setPersonalization(personalization);
+
+      await mailerSend.email.send(emailParams);
+
+      console.log(`✅ Verification email sent to ${email}`);
+    } catch (err) {
+      console.error(`❌ Failed to send verification email to ${email}:`, err);
+      throw err;
+    }
+  }
 };
 
 module.exports = emailService;
