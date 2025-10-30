@@ -10,31 +10,24 @@ const activeChats = new Map();
 console.log("Initializing socket...");
 
 const initializeSocket = (server) => {
-  // const io = new Server(server, {
-  //   cookie: true,
-  //   cors: {
-  //     origin: [APP_CONFIG.MENTOR_REDIRECT_URL_SUCCESS, APP_CONFIG.DEFAULT_REDIRECT_URL, APP_CONFIG.STUDENT_REDIRECT_URL_SUCCESS],
-  //     methods: ["GET", "POST"],
-  //     credentials: true,
-  //   },
-  // });
 
   const io = new Server(server, {
   cookie: true,
   cors: {
     origin: [
-        APP_CONFIG.MENTOR_REDIRECT_URL_SUCCESS, 
-        APP_CONFIG.STUDENT_REDIRECT_URL_SUCCESS,
-      ],
+      APP_CONFIG.MENTOR_REDIRECT_URL_SUCCESS,
+      APP_CONFIG.STUDENT_REDIRECT_URL_SUCCESS,
+    ],
     methods: ["GET", "POST"],
     credentials: true,
-    allowedHeaders: ["content-type"]
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
   },
-  // Allow polling as fallback
-  transports: ['websocket'],
+  transports: ['websocket', 'polling'],
+  allowEIO3: true,
   pingTimeout: 60000,
   pingInterval: 25000
 });
+
 
   io.on("connection", async (socket) => {
     
