@@ -22,29 +22,16 @@ const initializeSocket = (server) => {
   const io = new Server(server, {
   cookie: true,
   cors: {
-    origin: function(origin, callback) {
-      // Allow requests with no origin (mobile apps, curl, etc.)
-      if (!origin) return callback(null, true);
-      
-      const allowedOrigins = [
+    origin: [
         APP_CONFIG.MENTOR_REDIRECT_URL_SUCCESS, 
-        APP_CONFIG.DEFAULT_REDIRECT_URL, 
         APP_CONFIG.STUDENT_REDIRECT_URL_SUCCESS,
-      ];
-      
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.error(`Socket CORS blocked origin: ${origin}`);
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+      ],
     methods: ["GET", "POST"],
     credentials: true,
     allowedHeaders: ["content-type"]
   },
   // Allow polling as fallback
-  transports: ['websocket', 'polling'],
+  transports: ['websocket'],
   pingTimeout: 60000,
   pingInterval: 25000
 });
