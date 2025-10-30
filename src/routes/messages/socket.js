@@ -272,7 +272,7 @@ console.log('━━━━━━━━━━━━━━━━━━━━━━�
       const messageData = result[0];
       const messageId = messageData?.id;
       
-      console.log(`✅ Message saved with ID: ${messageId}`);
+      console.log(`✅ Message saved with ID: ${messageId}`, users);
 
       const receiverSocketId = users.get(receiverId);
 
