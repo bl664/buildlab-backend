@@ -16,7 +16,7 @@ function validateRepoName(repoName) {
     }
     
 const validNameRegex = /^[a-zA-Z0-9_\- ]+$/;
-    console.log("validNameRegex.test(repoName)", validNameRegex.test(repoName))
+    // console.log("validNameRegex.test(repoName)", validNameRegex.test(repoName))
     if (!validNameRegex.test(repoName)) {
         errors.push('Repository name can only contain alphanumeric characters, hyphens (-), underscores (_), and periods (.)');
     }
@@ -101,10 +101,10 @@ async function checkIfRepoExists(repoName, github_token) {
 
 // VERSION 1: Returns Response objects (for API endpoints)
 async function createGitHubRepo(repoName, description, github_token) {
-    console.log("Creating repo:", repoName, description, github_token);
+    // console.log("Creating repo:", repoName, description, github_token);
 
     if (!github_token) {
-        console.log("GitHub token is required")
+        // console.log("GitHub token is required")
         return new Response(
             JSON.stringify({ error: 'GitHub token is required' }),
             { status: 400, headers: { 'Content-Type': 'application/json' } }
@@ -113,7 +113,7 @@ async function createGitHubRepo(repoName, description, github_token) {
 
     const nameValidation = validateRepoName(repoName);
     if (!nameValidation.isValid) {
-        console.log("Invalid repository name")
+        // console.log("Invalid repository name")
         return new Response(
             JSON.stringify({ 
                 error: 'Invalid repository name', 
@@ -122,10 +122,10 @@ async function createGitHubRepo(repoName, description, github_token) {
             { status: 400, headers: { 'Content-Type': 'application/json' } }
         );
     }
-console.log("name is valid")
+// console.log("name is valid")
     const descValidation = validateDescription(description);
     if (!descValidation.isValid) {
-        console.log("Invalid repository description")
+        // console.log("Invalid repository description")
         return new Response(
             JSON.stringify({ 
                 error: 'Invalid repository description', 
@@ -134,7 +134,7 @@ console.log("name is valid")
             { status: 400, headers: { 'Content-Type': 'application/json' } }
         );
     }
-    console.log("description is valid")
+    // console.log("description is valid")
 
     const sanitizedRepoName = nameValidation.sanitizedName;
     const sanitizedDescription = descValidation.sanitizedDescription;
@@ -143,7 +143,7 @@ console.log("name is valid")
         const repoExists = await checkIfRepoExists(sanitizedRepoName, github_token);
         
         if (repoExists) {
-            console.log("Repository '${sanitizedRepoName}' already exists in your account")
+            // console.log("Repository '${sanitizedRepoName}' already exists in your account")
             return new Response(
                 JSON.stringify({ 
                     error: `Repository '${sanitizedRepoName}' already exists in your account` 
@@ -151,7 +151,7 @@ console.log("name is valid")
                 { status: 409, headers: { 'Content-Type': 'application/json' } }
             );
         }
-        console.log("repo is not exists")
+        // console.log("repo is not exists")
 
         const repoResponse = await fetch('https://api.github.com/user/repos', {
             method: 'POST',
@@ -165,7 +165,7 @@ console.log("name is valid")
                 description: sanitizedDescription,
             }),
         });
-        console.log("repoResponse is ", repoResponse)
+        // console.log("repoResponse is ", repoResponse)
 
         if (!repoResponse.ok) {
             const errorData = await repoResponse.json();
@@ -203,7 +203,7 @@ console.log("name is valid")
 
 // VERSION 2: Throws errors (better for internal function calls)
 async function createGitHubRepoThrows(repoName, description, github_token) {
-    console.log("Creating repo:", repoName, description);
+    // console.log("Creating repo:", repoName, description);
 
     if (!github_token) {
         throw new Error('GitHub token is required');

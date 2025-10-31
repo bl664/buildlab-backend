@@ -9,7 +9,6 @@ const {
 const { sendAndStoreNotification } = require('../../../utils/notificationService');
 
 router.post('/', async (req, res) => {
-    console.log("rejecting group request")
   const mentor_id = req.user?.id;
   const io = req.app.get('io');
   const { request_id } = req.body;
@@ -71,7 +70,6 @@ router.post('/', async (req, res) => {
       url: '/groups'
     });
 
-    console.log(`✅ Group request ${request_id} rejected by mentor ${mentor_id}`);
 
     return res.json({ message: 'Request rejected successfully' });
 

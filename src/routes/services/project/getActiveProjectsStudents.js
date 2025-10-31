@@ -3,7 +3,6 @@ const router = express.Router();
 const { queryDatabase, getTransactionClient } = require('../../../services/dbQuery');
 
 router.get('/', async (req, res) => {
-    console.log("Fetching active projects for mentor");
 
     let user_id = req.user.id
 if (!user_id) {

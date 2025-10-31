@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
     }
 
     const user = result[0];
-console.log("fetched user info", user);
+// console.log("fetched user info", user);
     return res.json({
       message: 'fetched',
       result: user,

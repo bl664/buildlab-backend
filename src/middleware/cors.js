@@ -217,7 +217,7 @@ function validateCorsConfig() {
     throw new Error('Invalid CORS configuration');
   }
 
-  console.log(`✅ CORS configuration valid (${allowedOrigins.length} origins allowed)`);
+  // console.log(`✅ CORS configuration valid (${allowedOrigins.length} origins allowed)`);
   return true;
 }
 

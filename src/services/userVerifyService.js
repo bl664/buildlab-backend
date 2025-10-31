@@ -55,7 +55,6 @@ const verifyEmailToken = async (token, client = null) => {
   
   const result = await queryDatabase(query, [tokenHash], client);
   const user = result[0];
-  console.log("verify user is ", user)
   if (!user) {
     console.log("Invalid verification token")
     return { success: false, error: 'Invalid verification token' };
@@ -90,7 +89,6 @@ const markUserAsVerified = async (userId, client = null) => {
     WHERE id = $1
   `;
   await queryDatabase(updateUserQuery, [userId], client);
-console.log("marked as verified")
   const clearTokenQuery = `
     UPDATE users_additional_info
     SET verification_token = NULL,
@@ -98,7 +96,6 @@ console.log("marked as verified")
     WHERE user_id = $1
   `;
   await queryDatabase(clearTokenQuery, [userId], client);
-  console.log("token is cleared")
 };
 
 // Resend verification email

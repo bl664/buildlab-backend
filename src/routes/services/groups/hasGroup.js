@@ -7,16 +7,12 @@ const APP_CONFIG = require('../../../../config');
 const jwt = require('jsonwebtoken');
 
 router.get('/', async (req, res) => {
-    console.log("yes getting groups");
-       
-      
 
-     
     const mentor_id =req.user.id;
-    console.log("mentorid", mentor_id);
+    // console.log("mentorid", mentor_id);
 
     try {
-        console.log("checking group...")
+        // console.log("checking group...")
         const query = `
             SELECT EXISTS (
                 SELECT 1
@@ -25,15 +21,15 @@ router.get('/', async (req, res) => {
             ) AS has_group;
         `;
         const values = [mentor_id];
-console.log("finalinzing result calling...")
+// console.log("finalinzing result calling...")
         const result = await queryDatabase(query, values);
-console.log("has groups ", result[0].has_group )
+// console.log("has groups ", result[0].has_group )
         return res.json({
             message: 'fetched',
             group: result[0].has_group 
         });
     } catch (error) {
-    console.log('Invalid user in group', { mentor_id });
+    // console.log('Invalid user in group', { mentor_id });
     console.error('Error during group check:', error); // <-- Add this
     res.status(401).json({ error: 'Invalid user' });
 }

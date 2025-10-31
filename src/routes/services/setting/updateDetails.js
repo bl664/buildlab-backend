@@ -6,7 +6,6 @@ const { queryDatabase } = require('../../../services/dbQuery');
 //router.use(authMiddleware);
 
 router.put('/', async (req, res) => {
-    console.log("Profile update request received");
 
     const newReq = JSON.parse(JSON.stringify(req.user));
     const user_id = req.user.id
@@ -26,7 +25,6 @@ router.put('/', async (req, res) => {
             education,
         } = req.body.formData;
 
-        console.log("req.body", req.body.formData);
 
         const nameToUpdate = full_name ;
 
@@ -47,7 +45,6 @@ router.put('/', async (req, res) => {
             const userValues = [nameToUpdate, user_id];
             const userResult = await queryDatabase(userQuery, userValues);
             updatedUser = userResult[0];
-            console.log("User updated:", updatedUser);
         }
 
         // Check if profile exists
@@ -86,7 +83,6 @@ router.put('/', async (req, res) => {
 
             const profileResult = await queryDatabase(updateProfileQuery, profileValues);
             updatedProfile = profileResult[0];
-            console.log("Profile updated:", updatedProfile);
         } else {
             // Create new profile
             const createProfileQuery = `
@@ -115,7 +111,6 @@ router.put('/', async (req, res) => {
 
             const profileResult = await queryDatabase(createProfileQuery, profileValues);
             updatedProfile = profileResult[0];
-            console.log("Profile created:", updatedProfile);
         }
 
         // Commit the transaction

@@ -8,7 +8,6 @@ const { sendAndStoreNotification } = require('../../../utils/notificationService
 //router.use(authMiddleware);
 
 router.post('/', async (req, res) => {
-  console.log("Creating meeting...", req.body.meetingData);
 
   const createdById = req.user.id;
   const { project_id, students_list, mentor_id, room_name, room_link, started_at, ended_at } = req.body.meetingData || {};
@@ -116,7 +115,6 @@ const io = req.app.get('io');
     const formattedMeetingData = completeMeetingResult[0];
 
      const sendNotification = students_list.map(async (studentId) => {
-      console.log("Sending notification to ", studentId)
       await sendAndStoreNotification(io, studentId, {
                 type: 'New Meeting',
                 content: `New Meeting ${room_name}  is created. `,

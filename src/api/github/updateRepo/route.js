@@ -21,7 +21,7 @@ async function updateGitHubRepoName(currentRepoName, newRepoName, user_id) {
         if (!repoCheck) {
             throw new Error(`Repository "${currentRepoName}" does not exist.`);
         }
-        console.log("yes repo exists")
+        // console.log("yes repo exists")
 
         const response = await fetch(`https://api.github.com/repos/${github_user_name}/${currentRepoName}`, {
             method: 'PATCH',

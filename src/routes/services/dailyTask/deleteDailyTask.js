@@ -36,7 +36,7 @@ router.delete('/', async (req, res) => {
             return res.status(403).json({ error: 'You are not authorized to delete this task' });
         }
 
-        console.log("Deleting daily task with id:", id);
+        // console.log("Deleting daily task with id:", id);
 
         const query = `
             DELETE FROM daily_tasks
@@ -46,7 +46,7 @@ router.delete('/', async (req, res) => {
 
         const result = await queryDatabase(query, values);
 
-        console.log("Daily task deleted successfully", { id });
+        // console.log("Daily task deleted successfully", { id });
         res.status(200).json({ message: 'Deleted successfully' });
     } catch (error) {
         console.error("Error deleting daily task", { error: error.message });

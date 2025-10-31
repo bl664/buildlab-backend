@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
         //     return res.status(404).json({ error: 'Group not found' });
         // }
 
-        console.log("fetched group by id is", result)
+        // console.log("fetched group by id is", result)
         
         return res.json({
             message: 'Fetched successfully',

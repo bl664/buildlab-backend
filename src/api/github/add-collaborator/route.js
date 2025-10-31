@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
         body: JSON.stringify({ permission: 'push' }),
       }
     );
-console.log("response is ", response)
+// console.log("response is ", response)
     if (response.status === 201 || response.status === 204) {
       return res.status(200).json({ message: 'Collaborator added successfully.' });
     } else {

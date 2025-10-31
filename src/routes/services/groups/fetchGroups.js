@@ -11,9 +11,8 @@ router.get('/', async (req, res) => {
     console.log("yes getting groups")
        
 
-     
     const mentor_id = req.user.id
-    console.log("mentorid", mentor_id)
+    // console.log("mentorid", mentor_id)
     try {
     const query = `
     SELECT 
@@ -36,7 +35,7 @@ GROUP BY g.id, g.title, g.description, g.tags, g.max_members;
 
         const result = await queryDatabase(query, values);
         const student_groups = result;
-console.log("student_groups", student_groups)
+// console.log("student_groups", student_groups)
         return res.json({
             message: 'fetched',
             groups: student_groups

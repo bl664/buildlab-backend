@@ -82,7 +82,7 @@ router.post('/', async (req, res) => {
             `, [request.student_id]);
 
             const studentDetails = studentDetailsQuery[0];
-console.log("Student Details:", studentDetails);
+// console.log("Student Details:", studentDetails);
             await emailService.sendGroupJoinedConfirmation(studentDetails.email, studentDetails.name, request.group_name);
 
             res.json({ message: 'Request approved successfully' });

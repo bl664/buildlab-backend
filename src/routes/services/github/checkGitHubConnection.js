@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
     console.log("getting github user from DB")
     try {
         const userId = req.user.id;
-console.log("userId ", userId)
+// console.log("userId ", userId)
         if (!userId) {
             return res.status(400).json({ error: 'User ID is required' });
         }
@@ -19,7 +19,7 @@ console.log("userId ", userId)
             [userId]
         );
 
-        console.log("github result is ", result)
+        // console.log("github result is ", result)
 
         if (result.length === 0) {
             return res.status(400).json({ message: 'GitHub not connected' });

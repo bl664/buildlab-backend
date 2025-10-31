@@ -10,7 +10,6 @@ const { sendAndStoreNotification } = require('../../../utils/notificationService
 
 router.post('/', async (req, res) => {
     const user_id = req.user.id;
-    console.log("proect req.user_id", user_id)
 
     if (!user_id) {
         return res.status(401).json({ error: 'Unauthorized. Please log in again.' });
@@ -22,10 +21,8 @@ router.post('/', async (req, res) => {
     const io = req.app.get('io');
 
     try {
-        console.log('cerating project with data', req.body.projectData)
         const { name, description, status, end_date, createdById, teamMembers, techStack, skillsRequired, mentorData } = req.body.projectData;
         const user = req.body.user
-        console.log("user is ", user)
         const start_date = req.body.start_date || new Date().toISOString().split('T')[0];
         const mentorId = mentorData || user_id;
 
@@ -45,18 +42,14 @@ router.post('/', async (req, res) => {
             });
         }
 
-        console.log('Starting project creation process...');
-
         // Step 1: Check if project already exists
         const projectCheck = await checkProjectExistence(name, user_id);
         if (projectCheck.exists) {
-            console.log('Project already exists');
             return res.status(409).json({
                 error: 'Project already exists',
                 details: projectCheck.message
             });
         }
-        console.log("project does not exist, proceeding with creation");
 
         // Step 2: Get GitHub token
         const tokenResult = await queryDatabase(
@@ -91,7 +84,6 @@ router.post('/', async (req, res) => {
             });
         }
 
-        console.log('All validations passed. Creating GitHub repository...', name, description, github_token);
 
         // Step 4: Create GitHub repository
         const repoResponse = await createGitHubRepo(name, description, github_token);
@@ -112,7 +104,6 @@ router.post('/', async (req, res) => {
         repoCreated = true;
         repoName = repoData.repoName;
 
-        console.log('GitHub repository created successfully:', repoData.repoUrl);
 
         // Step 5: Start database transaction
         client = await getTransactionClient();
@@ -137,9 +128,7 @@ router.post('/', async (req, res) => {
             if (!projectResult || projectResult.length === 0) {
                 throw new Error('Failed to create project in database');
             }
-            console.log("projectresult ", projectResult)
             const projectId = projectResult[0].id;
-            console.log('Project inserted successfully with ID:', projectId);
 
             // Step 6: Create mentor-project relation (PASS CLIENT!)
             await queryDatabase(
@@ -147,7 +136,6 @@ router.post('/', async (req, res) => {
                 [projectId, mentorId],
                 client  // ← This is the key fix!
             );
-            console.log('Mentor-project relation created');
 
             // Step 7: Create student-project relations (PASS CLIENT!)
             const studentInsertPromises = teamMembers.map((student) => {
@@ -163,10 +151,8 @@ router.post('/', async (req, res) => {
             });
 
             await Promise.all(studentInsertPromises);
-            console.log('Student-project relations created');
 
             if (user === 'student') {
-                console.log("sending notification as a student to mentor ", mentorId)
                 const mentor_id = mentorId;
                 await sendAndStoreNotification(io, mentor_id, {
                     type: 'New Project Created',
@@ -176,7 +162,6 @@ router.post('/', async (req, res) => {
                 });
             }
             else if (user === 'mentor') {
-                console.log("sending notification as a mentor to students ")
                 const sendNotification = teamMembers.map(async (student) => {
                     const studentId = student.id || student;
                     await sendAndStoreNotification(io, studentId, {
@@ -190,7 +175,6 @@ router.post('/', async (req, res) => {
 
             // Commit transaction
             await client.query('COMMIT');
-            console.log('Transaction committed successfully');
 
             const payload = {
                 id: projectId,
@@ -200,7 +184,6 @@ router.post('/', async (req, res) => {
                 end_date: end_date,
                 assignee: teamMembers?.length
             }
-            console.log("paylaod is", payload )
             // Success response
             return res.status(201).json({
                 success: true,

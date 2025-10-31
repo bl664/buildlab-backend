@@ -6,13 +6,10 @@ const { queryDatabase } = require('../../../services/dbQuery');
 //router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
-    console.log("yes getting groups for students")
-       
-      
 
      
     const student_id = req.user.id
-    console.log("student_id", student_id)
+    // console.log("student_id", student_id)
     try {
         const query = `
         SELECT 
@@ -46,7 +43,7 @@ ORDER BY sg.created_at DESC;
         const result = await queryDatabase(query, [student_id]);
 
         const student_groups = result;
-console.log("student_groups are", student_groups)
+// console.log("student_groups are", student_groups)
         return res.json({
             message: 'fetched',
             groups: student_groups

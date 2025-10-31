@@ -31,7 +31,7 @@ router.post('/', async (req, res) => {
       path: '/',
     });
 
-    console.log("Cookies cleared successfully");
+    // console.log("Cookies cleared successfully");
 
     return res.status(200).json({ success: true, message: 'Logged out successfully' });
   } catch (error) {

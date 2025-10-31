@@ -28,7 +28,7 @@ router.post('/', async (req, res) => {
 
     // Verify token
     const verification = await verifyEmailToken(token, client);
-    console.log("verification is ", verification);
+    // console.log("verification is ", verification);
 
     if (!verification.success) {
       console.log("verification failed");
@@ -81,15 +81,15 @@ router.post('/', async (req, res) => {
     const isValidPassword = await bcrypt.compare(password, userPassword);
     const isValidEmail = userEmail === email;
 
-    console.log("creds validation is ", isValidEmail, isValidPassword);
-    console.log("passwords are", userPassword, password);
+    // console.log("creds validation is ", isValidEmail, isValidPassword);
+    // console.log("passwords are", userPassword, password);
 
     if (!(isValidEmail && isValidPassword)) {
       const user = {
         failed_login_attempts: verification.failed_login_attempts,
         id: verification.userId
       };
-      console.log("user is ", user);
+      // console.log("user is ", u///////ser);
 
       await updateFailedLogin(user, client);
       await commitTransaction(client);
@@ -114,7 +114,7 @@ router.post('/', async (req, res) => {
       role: profile.role,
       token_name: APP_CONFIG.BL_AUTH_JWT_TOKEN_NAME
     };
-    console.log("payload is ", payload);
+    // console.log("payload is ", payload);
 
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
@@ -133,7 +133,7 @@ router.post('/', async (req, res) => {
     else if (payload.role === 'mentor') redirectUrl = APP_CONFIG.MENTOR_REDIRECT_URL_SUCCESS;
     else redirectUrl = APP_CONFIG.DEFAULT_REDIRECT_URL || '/';
 
-    console.log("email verified and authenticated");
+    // console.log("email verified and authenticated");
 
     return res.status(200).json({
       message: 'Email verified successfully!',

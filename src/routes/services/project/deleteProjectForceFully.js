@@ -3,7 +3,6 @@ const router = express.Router();
 const { queryDatabase, getTransactionClient } = require('../../../services/dbQuery');
 
 router.delete('/', async (req, res) => {
-    console.log("Forcefully deleting project with access control");
     
     const user_id = req.user.id;
 
@@ -58,7 +57,6 @@ router.delete('/', async (req, res) => {
         }
 
         await client.query('COMMIT');
-        console.log("Deleted project:", result[0]);
 
         return res.json({
             message: 'Project deleted successfully',

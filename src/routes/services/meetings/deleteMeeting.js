@@ -8,7 +8,6 @@ const { queryDatabase, getTransactionClient } = require('../../../services/dbQue
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
-console.log("deleting meeting", id)
   if (!id) {
     return res.status(400).json({
       success: false,
@@ -62,7 +61,6 @@ console.log("deleting meeting", id)
       try {
         await client.query('ROLLBACK');
       } catch (rollbackError) {
-        console.log("Rollback failed:", rollbackError);
       }
     }
 

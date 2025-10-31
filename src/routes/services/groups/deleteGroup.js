@@ -57,7 +57,7 @@ router.delete('/', async (req, res) => {
 
         await commitTransaction(client);
 
-        console.log("Group deleted successfully:", id);
+        // console.log("Group deleted successfully:", id);
 
         return res.status(200).json({
             message: 'Group deleted successfully',

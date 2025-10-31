@@ -35,7 +35,7 @@ router.post('/', signinRateLimiter, async (req, res) => {
     }
 
     if (!isEmailValid(email)) {
-      console.log('signin_invalid_email', { ip: req.ip, email });
+      // console.log('signin_invalid_email', { ip: req.ip, email });
       return res.status(400).json({ error: 'Invalid email or password' });
     }
     client = await getTransactionClient();

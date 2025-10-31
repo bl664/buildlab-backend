@@ -6,7 +6,6 @@ const jwt = require('jsonwebtoken');
 const { deleteGitHubRepo } = require('../../../../src/api/github/deleteRepo/route');
 
 router.delete('/', async (req, res) => {
-    console.log("yes deleting project");
     const user_id = req.user.id
 let client;
     try {
@@ -46,7 +45,6 @@ let client;
 
         const  repoName = accessResult[0].github_repo_name;
 
-console.log("repoName", repoName);
         let githubQuery = `SELECT github_token, github_user_name FROM github_users WHERE user_id = $1`;
 
         const githubResult = await queryDatabase(githubQuery, [user_id], client);
@@ -73,7 +71,6 @@ console.log("repoName", repoName);
         
         const result = await queryDatabase(query, values, client);
 
-        console.log("Deleted project:", result);
         await client.query('COMMIT');
             client.release();
 

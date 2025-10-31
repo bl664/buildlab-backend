@@ -7,7 +7,6 @@ const { queryDatabase } = require('../../../services/dbQuery');
 //router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
-    console.log("getting mentor meetings count");
 
     const userId = req.user.id;
 
@@ -21,7 +20,6 @@ router.get('/', async (req, res) => {
         const params = [userId];
 
         const result = await queryDatabase(query, params);
-console.log("count is ", parseInt(result[0].count, 10))
         return res.status(200).json({
             success: true,
             count: parseInt(result[0].count, 10), 

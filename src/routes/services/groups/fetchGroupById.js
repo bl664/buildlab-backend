@@ -35,7 +35,7 @@ router.get('/', async (req, res) => {
       console.log('⚠️ Group not found');
       return res.status(404).json({ error: 'Group not found' });
     }
-console.log('✅ Group details fetched:', groupResult[0]);
+// console.log('✅ Group details fetched:', groupResult[0]);
     const group = groupResult[0];
 
     // 2️⃣ Fetch associated projects
@@ -56,7 +56,7 @@ console.log('✅ Group details fetched:', groupResult[0]);
 
     group.projects = projectsResult || [];
 
-    console.log(`✅ Group fetched with ${group.projects} project(s)`);
+    // console.log(`✅ Group fetched with ${group.projects} project(s)`);
 
     // 3️⃣ Return combined data
     return res.json({

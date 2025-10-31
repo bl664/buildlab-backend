@@ -6,7 +6,7 @@ const xss = require("xss");
 router.post('/', async (req, res) => {
     console.log("Creating daily task");
     const user_id = req.user.id
-    console.log("req.body is", req.body);
+    // console.log("req.body is", req.body);
 
     if(!user_id) {
         console.log("Your session has expired. Please Login again.")

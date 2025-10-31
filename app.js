@@ -105,7 +105,6 @@ const speedLimiter = slowDown({
 });
 
 // ✅ DISABLE CLUSTERING - Run single process
-console.log(`Starting server in single-process mode (PID: ${process.pid})`);
 
 const app = createApp({
   helmetMiddleware,

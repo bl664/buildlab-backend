@@ -25,7 +25,7 @@ router.post('/', async (req, res) => {
     const groupCreateResult = await queryDatabase(groupCreateQuery, groupCreateValues, client);
 
     const groupId = groupCreateResult[0].id;
-    console.log('✅ Group created with ID:', groupId);
+    // console.log('✅ Group created with ID:', groupId);
 
     // 2️⃣ If there are projects, insert them
     if (Array.isArray(projects) && projects.length > 0) {
@@ -62,7 +62,7 @@ router.post('/', async (req, res) => {
         await queryDatabase(projectInsertQuery, projectInsertValues, client);
       }
 
-      console.log('✅ All projects inserted successfully.');
+      // console.log('✅ All projects inserted successfully.');
     } else {
       console.log('⚠️ No projects to insert for this group.');
     }

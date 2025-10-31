@@ -5,7 +5,6 @@ const { updateGitHubRepoName } = require('../../../api/github/updateRepo/route')
 const { sendAndStoreNotification } = require('../../../utils/notificationService');
 
 router.put('/', async (req, res) => {
-    console.log("yes project update");
 
     const user_id = req.user.id;
 
@@ -163,15 +162,8 @@ let client;
             const updatedSet = new Set(updatedStudentIds);
             const existingSet = new Set(existingStudentIds);
 
-
-            console.log("updateset", updatedSet)
-            console.log("existing set", existingSet)
-
             const toAdd = normalizedUpdatedIds.filter(student => !existingSet.has(student.user_id));
             const toRemove = existingStudentIds.filter(sid => !updatedSet.has(sid));
-            
-            console.log("to add", toAdd)
-            console.log("to remove", toRemove)
             
             if (toRemove.length > 0) {
                 await queryDatabase(
@@ -181,7 +173,6 @@ let client;
             }
 
             for (const studentId of toAdd) {
-                console.log("to add student id", studentId)
                 await queryDatabase(
                     `INSERT INTO student_projects (project_id, student_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
                     [id, studentId], client
@@ -190,7 +181,6 @@ let client;
 
             try {
                 const notificationPromises = normalizedUpdatedIds.map(async (student) => {
-                    console.log("student is ", student)
                     try {
                         await sendAndStoreNotification(io, student, {
                             type: 'project_updated',

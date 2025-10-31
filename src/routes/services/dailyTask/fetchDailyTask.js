@@ -28,7 +28,7 @@ router.get('/', async (req, res) => {
             return res.status(200).json([]);
         }
 
-        console.log("Daily tasks fetched successfully", { user_id });
+        // console.log("Daily tasks fetched successfully", { user_id });
         res.status(200).json(tasks);
 
     } catch (error) {

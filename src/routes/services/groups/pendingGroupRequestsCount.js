@@ -7,10 +7,8 @@ const APP_CONFIG = require('../../../../config');
 //router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
-    console.log("yes fetching requests groups");
 
     const mentor_id = req.user.id;
-    console.log("mentorid", mentor_id);
 
     try {
         const query = `
@@ -29,7 +27,6 @@ GROUP BY g.id;
         const values = [mentor_id];
         const result = await queryDatabase(query, values);
 
-        console.log("result for pending Requests Count", result);
 
         return res.json({
             pendingRequestsCount: result   // each row = { group_id, requests_count }

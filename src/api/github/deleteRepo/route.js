@@ -1,6 +1,6 @@
 
 async function deleteGitHubRepo(username, repoName, token) {
-    console.log('Deleting GitHub repository:', username, repoName, token);
+    // console.log('Deleting GitHub repository:', username, repoName, token);
     try {
         const url = `https://api.github.com/repos/${username}/${repoName}`;
         const response = await fetch(url, {
@@ -12,7 +12,7 @@ async function deleteGitHubRepo(username, repoName, token) {
         });
 
         if (response.status === 204) {
-            console.log('GitHub repository deleted successfully');
+            // console.log('GitHub repository deleted successfully');
             return { success: true };
         } else {
             const errorData = await response.json();

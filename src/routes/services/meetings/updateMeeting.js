@@ -8,9 +8,7 @@ const { queryDatabase, getTransactionClient } = require('../../../services/dbQue
 router.get('/:id', async (req, res) => {
   
   const { id } = req.params;
-  console.log("update meeting", id, req.params)
   const userId = req.user.id;
-  console.log("req userId is ", req.user)
   if (!id) {
     return res.status(400).json({
       success: false,

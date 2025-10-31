@@ -4,7 +4,7 @@ const path = require('path');
 const APP_CONFIG = require('../../../config.js');
 dotenv.config();
 
-console.log("app config",  APP_CONFIG.HOST, APP_CONFIG.DB_PORT, APP_CONFIG.USERNAME,  APP_CONFIG.PASSWORD, APP_CONFIG.DATABASE);
+// console.log("app config",  APP_CONFIG.HOST, APP_CONFIG.DB_PORT, APP_CONFIG.USERNAME,  APP_CONFIG.PASSWORD, APP_CONFIG.DATABASE);
 
 const migrationConfig = {
     type: 'postgres',

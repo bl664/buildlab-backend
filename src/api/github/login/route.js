@@ -6,9 +6,9 @@ router.get('/', (req, res) => {
   
   const userId = req.query.userId;
   const role = req.query.role;
-console.log("creating user...", userId, role)
+// console.log("creating user...", userId, role)
   if (!userId) {
-    console.log("missing user Id")
+    // console.log("missing user Id")
     return res.status(400).send('Missing userId');
   }
 

@@ -6,10 +6,8 @@ const { queryDatabase } = require('../../../services/dbQuery');
 //router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
-    console.log("Getting search students");
     const userId = req.user.id;
     const { term } = req.query;
-    console.log("Search term:", term);
 
     try {
         // Step 1: Get the role of the current user
@@ -23,11 +21,9 @@ router.get('/', async (req, res) => {
         }
 
         const userRole = roleResult[0].role;
-         console.log(`[searchUser] - User ${userId} has role: ${userRole}`);
         let studentIds = [];
 
         if (userRole === 'student') {
-             console.log(`[searchUser] - Student path: finding groups for student ${userId}`);
             // Step 2a: If student, find their group_id(s)
             const groupResult = await queryDatabase(
                 `SELECT group_id FROM student_group_members WHERE student_id = $1`,
@@ -35,7 +31,6 @@ router.get('/', async (req, res) => {
             );
 
             const groupIds = groupResult.map(row => row.group_id);
-  console.log(`[searchUser] - Found group IDs for student ${userId}:`, groupIds);
             if (groupIds.length === 0) {
                 return res.json([]);
             }
@@ -47,11 +42,8 @@ router.get('/', async (req, res) => {
             );
 
             studentIds = studentResult.map(row => row.student_id);
-            console.log(`[searchUser] - Found peer student IDs in the same groups:`, studentIds);
 
         } else if (userRole === 'mentor') {
-                        console.log(`[searchUser] - Mentor path: finding groups for mentor ${userId}`);
-
             // Step 3a: If mentor, find all group_ids they mentor
             const groupResult = await queryDatabase(
                 `SELECT id FROM student_groups WHERE mentor_id = $1`,
@@ -59,7 +51,6 @@ router.get('/', async (req, res) => {
             );
 
             const groupIds = groupResult.map(row => row.id);
-            console.log(`[searchUser] - Found group IDs for mentor ${userId}:`, groupIds);
 
             if (groupIds.length === 0) {
                 return res.json([]);
@@ -72,7 +63,6 @@ router.get('/', async (req, res) => {
             );
 
             studentIds = studentResult.map(row => row.student_id);
-                        console.log(`[searchUser] - Found student IDs in mentored groups:`, studentIds);
 
         }
 
@@ -93,11 +83,8 @@ router.get('/', async (req, res) => {
             AND (name ILIKE $1 OR email ILIKE $1)
             LIMIT 10
         `;
-        console.log(`[searchUser] - Executing final search query with term: "${term}" for ${studentIds.length} potential users.`);
 
         const finalResult = await queryDatabase(searchQuery, values);
-        console.log(`[searchUser] - Search found ${finalResult.length} users.`);
-
         return res.json(finalResult);
 
     } catch (error) {

@@ -30,35 +30,23 @@ const initializeSocket = (server) => {
 
 
   io.on("connection", async (socket) => {
-    
-console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(`🔌 New Socket Connection`);
-  console.log(`📍 Socket ID: ${socket.id}`);
-  console.log(`🌐 Origin: ${socket.handshake.headers.origin}`);
-  console.log(`🚀 Transport: ${socket.conn.transport.name}`);
-  console.log(`🔒 Secure: ${socket.handshake.secure}`);
   
   let userId = null;
 
   // Check for cookies
   const cookieHeader = socket.handshake.headers.cookie;
-  console.log(`🍪 Raw Cookie Header: ${cookieHeader || 'MISSING'}`);
 
   if (cookieHeader) {
     try {
       const cookies = cookie.parse(cookieHeader);
-      console.log(`🍪 Parsed Cookie Keys:`, Object.keys(cookies));
-      console.log(`🔍 Looking for cookie: "${APP_CONFIG.BL_AUTH_COOKIE_NAME}"`);
       
       const userToken = cookies[APP_CONFIG.BL_AUTH_COOKIE_NAME];
       
       if (userToken) {
-        console.log(`✅ Auth cookie found, length: ${userToken.length}`);
         
         try {
           const decoded = jwt.verify(userToken, APP_CONFIG.BL_AUTH_SECRET_KEY);
           userId = decoded.userId;
-          console.log(`✅ JWT verified, User ID: ${userId}`);
           
           users.set(userId, socket.id);
           await sendExistingUnreadCounts(socket, userId);
@@ -70,7 +58,6 @@ console.log('━━━━━━━━━━━━━━━━━━━━━━�
 
           // ✅ Also emit to the connecting user about who else is online
           const onlineUserIds = Array.from(users.keys()).filter(id => id !== userId);
-          console.log(`📤 Sending online users list to ${userId}:`, onlineUserIds);
           socket.emit('onlineUsers', { userIds: onlineUserIds });
 
         } catch (jwtErr) {
@@ -92,7 +79,6 @@ console.log('━━━━━━━━━━━━━━━━━━━━━━�
     socket.emit('authError', { message: 'No cookies received' });
   }
 
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   
     if (!userId) {
     console.log('⚠️ Disconnecting unauthenticated socket');
@@ -134,8 +120,6 @@ console.log('━━━━━━━━━━━━━━━━━━━━━━�
           }
         }
 
-        console.log(`📊 Unread counts for user ${userId}:`, unreadCounts);
-
         if (callback) {
           callback({ unreadCounts });
         }
@@ -162,7 +146,6 @@ console.log('━━━━━━━━━━━━━━━━━━━━━━�
 
         const totalCount = parseInt(result[0]?.count || 0);
 
-        // console.log(`📊 Total unread count for user ${userId}: ${totalCount}`);
 
         if (callback) {
           callback({ totalCount });

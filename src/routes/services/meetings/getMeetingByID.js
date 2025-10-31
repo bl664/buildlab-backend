@@ -7,7 +7,6 @@ const { queryDatabase } = require('../../../services/dbQuery');
 //router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
-  console.log("getting mentor meetings")
   const userId = req.user.id;
   const { status, project_id, limit = 50, offset = 0 } = req.query;
   

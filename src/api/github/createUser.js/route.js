@@ -1,14 +1,14 @@
 const { queryDatabase } = require('../../../services/dbQuery');
 
 async function saveGithubUserInfo(data, userId, githubToken) {
-  console.log("saving github user", userId);
+  // console.log("saving github user", userId);
 
   try {
     const { id, login, avatar_url, html_url, type, site_admin, public_repos, public_gists,
       followers, following, created_at, updated_at } = data;
 
-    console.log("creating user with data ", id, login, avatar_url, html_url, type, site_admin, public_repos, public_gists,
-      followers, following, created_at, updated_at, userId, githubToken);
+    // console.log("creating user with data ", id, login, avatar_url, html_url, type, site_admin, public_repos, public_gists,
+    //   followers, following, created_at, updated_at, userId, githubToken);
 
     // First, check if github_id already exists and belongs to a different user
     const existingUser = await queryDatabase(`

@@ -6,10 +6,8 @@ const { queryDatabase } = require('../../../services/dbQuery');
 //router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
-  console.log("Fetching student meetings...");
   
   const studentId = req.user.id;
-  console.log("Student ID:", studentId);
   
   if (!studentId) {
     return res.status(400).json({
@@ -39,7 +37,6 @@ router.get('/', async (req, res) => {
     
     // Extract meeting IDs
     const meetingIds = studentMeetingRows.map(row => row.meeting_id);
-    console.log("Found meeting IDs:", meetingIds);
     
     // Fetch meeting details one by one to avoid array issues
     const meetings = [];
@@ -106,7 +103,6 @@ router.get('/', async (req, res) => {
       })
     );
     
-    console.log(`Found ${meetings.length} meetings for student`);
     
     return res.status(200).json({
       success: true,

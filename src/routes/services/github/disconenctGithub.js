@@ -16,7 +16,7 @@ router.delete('/', async (req, res) => {
             [userId]
         );
 
-        console.log(`GitHub connection found for user ID: ${userId} and successfully deleted`);
+        // console.log(`GitHub connection found for user ID: ${userId} and successfully deleted`);
         return res.status(200);
     } catch (error) {
        console.log('Error fetching GitHub user info:', error);

@@ -8,10 +8,6 @@ router.put('/', async (req, res) => {
   const userId = req.user?.id;
   const { title, description, tags, max_members, projects } = req.body.groupData || {};
   
-  console.log("Trying to update group by id:", id, "by user:", userId);
-  console.log("Group data:", { title, description, tags, max_members });
-  console.log("Projects data:", projects);
-
   // Basic validation
   if (!id || !/^[0-9a-fA-F-]{36}$/.test(id)) {
     console.warn("Invalid group ID format");
@@ -98,14 +94,12 @@ router.put('/', async (req, res) => {
 
       const result = await queryDatabase(updateQuery, values, client);
       updatedGroup = result[0];
-      console.log("✅ Group updated successfully");
     } else {
       console.log("No group changes detected");
     }
 
     // 5️⃣ Handle Projects Update
     if (Array.isArray(projects)) {
-      console.log("Processing projects update...");
 
       // Get existing projects for this group
       const existingProjects = await queryDatabase(
@@ -130,7 +124,6 @@ router.put('/', async (req, res) => {
           [projectsToDelete],
           client
         );
-        console.log(`✅ Deleted ${projectsToDelete.length} projects`);
       }
 
       // 5b️⃣ Process each project (insert or update)
@@ -154,7 +147,6 @@ router.put('/', async (req, res) => {
 
         // Check if this is a new project (temporary ID starting with 'project-')
         const isNewProject = !projectId || projectId.startsWith('project-');
-console.log("existance", isNewProject, projectId)
         if (isNewProject) {
           // 5c️⃣ Insert new project
           await queryDatabase(
@@ -206,7 +198,6 @@ console.log("existance", isNewProject, projectId)
 
     await commitTransaction(client);
 
-    console.log("✅ Group and projects updated successfully");
 
     return res.status(200).json({
       message: 'Group updated successfully',

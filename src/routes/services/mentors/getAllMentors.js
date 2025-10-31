@@ -5,7 +5,6 @@ const { queryDatabase } = require('../../../services/dbQuery');
 //router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
-console.log("Getting All Mentors")
 
     try {
         const query = 'SELECT * FROM users WHERE role = $1';

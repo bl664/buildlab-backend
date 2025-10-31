@@ -3,7 +3,6 @@ const router = express.Router();
 const { queryDatabase, getTransactionClient } = require('../../../services/dbQuery');
 
 router.get('/', async (req, res) => {
-    console.log("yes active project count")
 
     let user_id = req.user.id
 
@@ -30,7 +29,6 @@ router.get('/', async (req, res) => {
         await client.query('COMMIT');
 
         const statusCounts = result;
-        console.log("statusCounts are", statusCounts)
 
         return res.json({
             message: 'fetched',
