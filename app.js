@@ -14,6 +14,39 @@ const emailService = require('./src/services/emailServices');
 validateCorsConfig();
 validateSecurityConfig();
 
+async function abc(email, user_name) {
+  await emailService.ConfirmEmail(email, user_name);
+}
+
+// 'deepakthakur4600@gmail.com', 'nikunsharma78@gmail.com', 'saniyabisht012@gmail.com', 'monugurjar2818@gmail.com', 'aash1301200@gmail.com'
+const emails = [
+  {
+  email: 'deepakthakur4600@gmail.com',
+  name: 'Deepak Thakur'
+}, {
+  email: 'nikunsharma78@gmail.com',
+  name: 'Nikunj Sharma'
+}, {
+  email: 'saniyabisht012@gmail.com',
+  name: 'Saniya Bisht'
+}, {
+  email: 'monugurjar2818@gmail.com',
+  name: 'Monu Gurjar'
+}, {
+  email: 'aash1301200@gmail.com',
+  name: 'Luffy Taro'
+}
+// {
+//   email: 'prateek.dixit664@gmail.com',
+//   name: 'Prateek Dixit'
+// }
+];
+
+// emails.forEach((email, index) => {
+//   abc(email.email, email.name);
+// });
+
+
 const helmetMiddleware = helmet({
   contentSecurityPolicy: {
     directives: {

@@ -182,7 +182,38 @@ const emailService = {
       console.error(`❌ Failed to send verification email to ${email}:`, err);
       throw err;
     }
-  }
+  },
+
+  ConfirmEmail: async (email, name) => {
+      try {
+      const recipients = [new Recipient(email)];
+
+      const personalization = [
+        {
+          email,
+          data: {
+            name,
+          },
+        },
+      ];
+      console.log("personalized", personalization)
+
+      // ✅ Use your MailerSend template ID here
+      const emailParams = new EmailParams()
+        .setFrom(sentFrom)
+        .setTo(recipients)
+        .setSubject("Verify your email address - BuildLab")
+        .setTemplateId("pr9084zyqpxgw63d")
+        .setPersonalization(personalization);
+
+      await mailerSend.email.send(emailParams);
+
+      console.log(`✅ Verification email sent to ${email}`);
+    } catch (err) {
+      console.error(`❌ Failed to send verification email to ${email}:`, err);
+      throw err;
+    }
+  },
 };
 
 module.exports = emailService;

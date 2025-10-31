@@ -63,8 +63,16 @@ console.log('━━━━━━━━━━━━━━━━━━━━━━�
           users.set(userId, socket.id);
           await sendExistingUnreadCounts(socket, userId);
           
-          // Emit success to client
-          socket.emit('authenticated', { userId });
+          // // Emit success to client
+          // socket.emit('authenticated', { userId });
+
+          socket.broadcast.emit('userOnline', { userId });
+
+          // ✅ Also emit to the connecting user about who else is online
+          const onlineUserIds = Array.from(users.keys()).filter(id => id !== userId);
+          console.log(`📤 Sending online users list to ${userId}:`, onlineUserIds);
+          socket.emit('onlineUsers', { userIds: onlineUserIds });
+
         } catch (jwtErr) {
           console.error(`❌ JWT verification failed: ${jwtErr.message}`);
           socket.emit('authError', { message: 'Invalid token' });
@@ -233,95 +241,182 @@ console.log('━━━━━━━━━━━━━━━━━━━━━━�
 //       }
 //     });
 
-    socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
-    // Validate senderId matches authenticated userId
-    if (senderId !== userId) {
-      console.error(`❌ SenderId mismatch: ${senderId} !== ${userId}`);
-      socket.emit("messageError", { error: "Unauthorized" });
-      return;
-    }
+  //   socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
+  //   // Validate senderId matches authenticated userId
+  //   if (senderId !== userId) {
+  //     console.error(`❌ SenderId mismatch: ${senderId} !== ${userId}`);
+  //     socket.emit("messageError", { error: "Unauthorized" });
+  //     return;
+  //   }
 
-    console.log(`📨 Message: ${senderId} -> ${receiverId}: "${message.substring(0, 50)}..."`);
+  //   console.log(`📨 Message: ${senderId} -> ${receiverId}: "${message.substring(0, 50)}..."`);
+    
+  //   try {
+  //     if (!message || !message.trim()) {
+  //       console.error("❌ Empty message");
+  //       socket.emit("messageError", { error: "Message cannot be empty" });
+  //       return;
+  //     }
+
+  //     const result = await queryDatabase(
+  //       `INSERT INTO messages (sender_id, receiver_id, message, status) 
+  //        VALUES ($1, $2, $3, $4) RETURNING id, created_at`,
+  //       [senderId, receiverId, message.trim(), "sent"]
+  //     );
+
+  //     if (!result || result.length === 0) {
+  //       console.error("❌ Database insert failed");
+  //       socket.emit("messageError", { error: "Failed to save message" });
+  //       return;
+  //     }
+
+  //     const messageData = result[0];
+  //     const messageId = messageData?.id;
+      
+  //     console.log(`✅ Message saved with ID: ${messageId}`, users);
+
+  //     const receiverSocketId = users.get(receiverId);
+
+  //     if (receiverSocketId) {
+  //       console.log(`📤 Delivering to receiver socket: ${receiverSocketId}`);
+        
+  //       io.to(receiverSocketId).emit("receiveMessage", {
+  //         id: messageId,
+  //         senderId,
+  //         message: message.trim(),
+  //         timestamp: messageData.created_at,
+  //         status: 'delivered'
+  //       });
+
+  //       const isActiveChat = activeChats.get(receiverId) === senderId;
+
+  //       if (isActiveChat) {
+  //         console.log(`👀 Receiver has chat open, marking as read`);
+  //         await queryDatabase("UPDATE messages SET status = $1 WHERE id = $2", ["read", messageId]);
+          
+  //         const senderSocketId = users.get(senderId);
+  //         if (senderSocketId) {
+  //           io.to(senderSocketId).emit("messagesRead", {
+  //             peerId: receiverId,
+  //             all: true
+  //           });
+  //         }
+  //       } else {
+  //         console.log(`📬 Receiver chat not active, marking as delivered`);
+  //         await queryDatabase("UPDATE messages SET status = $1 WHERE id = $2", ["delivered", messageId]);
+          
+  //         const senderSocketId = users.get(senderId);
+  //         if (senderSocketId) {
+  //           io.to(senderSocketId).emit("messagesDelivered", {
+  //             peerId: receiverId,
+  //             all: true
+  //           });
+  //         }
+  //       }
+  //     } else {
+  //       console.log(`📵 Receiver ${receiverId} is offline`);
+  //     }
+      
+  //     // Confirm to sender
+  //     socket.emit("messageSent", { 
+  //       messageId, 
+  //       timestamp: messageData.created_at 
+  //     });
+      
+  //   } catch (err) {
+  //     console.error("❌ sendMessage error:", err.message);
+  //     console.error(err.stack);
+  //     socket.emit("messageError", { error: "Failed to send message" });
+  //   }
+  // });
+
+  socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
+    if (senderId !== userId) {
+        console.error(`❌ SenderId mismatch: ${senderId} !== ${userId}`);
+        socket.emit("messageError", { error: "Unauthorized" });
+        return;
+    }
     
     try {
-      if (!message || !message.trim()) {
-        console.error("❌ Empty message");
-        socket.emit("messageError", { error: "Message cannot be empty" });
-        return;
-      }
-
-      const result = await queryDatabase(
-        `INSERT INTO messages (sender_id, receiver_id, message, status) 
-         VALUES ($1, $2, $3, $4) RETURNING id, created_at`,
-        [senderId, receiverId, message.trim(), "sent"]
-      );
-
-      if (!result || result.length === 0) {
-        console.error("❌ Database insert failed");
-        socket.emit("messageError", { error: "Failed to save message" });
-        return;
-      }
-
-      const messageData = result[0];
-      const messageId = messageData?.id;
-      
-      console.log(`✅ Message saved with ID: ${messageId}`, users);
-
-      const receiverSocketId = users.get(receiverId);
-
-      if (receiverSocketId) {
-        console.log(`📤 Delivering to receiver socket: ${receiverSocketId}`);
-        
-        io.to(receiverSocketId).emit("receiveMessage", {
-          id: messageId,
-          senderId,
-          message: message.trim(),
-          timestamp: messageData.created_at,
-          status: 'delivered'
-        });
-
-        const isActiveChat = activeChats.get(receiverId) === senderId;
-
-        if (isActiveChat) {
-          console.log(`👀 Receiver has chat open, marking as read`);
-          await queryDatabase("UPDATE messages SET status = $1 WHERE id = $2", ["read", messageId]);
-          
-          const senderSocketId = users.get(senderId);
-          if (senderSocketId) {
-            io.to(senderSocketId).emit("messagesRead", {
-              peerId: receiverId,
-              all: true
-            });
-          }
-        } else {
-          console.log(`📬 Receiver chat not active, marking as delivered`);
-          await queryDatabase("UPDATE messages SET status = $1 WHERE id = $2", ["delivered", messageId]);
-          
-          const senderSocketId = users.get(senderId);
-          if (senderSocketId) {
-            io.to(senderSocketId).emit("messagesDelivered", {
-              peerId: receiverId,
-              all: true
-            });
-          }
+        if (!message || !message.trim()) {
+            socket.emit("messageError", { error: "Message cannot be empty" });
+            return;
         }
-      } else {
-        console.log(`📵 Receiver ${receiverId} is offline`);
-      }
-      
-      // Confirm to sender
-      socket.emit("messageSent", { 
-        messageId, 
-        timestamp: messageData.created_at 
-      });
-      
-    } catch (err) {
-      console.error("❌ sendMessage error:", err.message);
-      console.error(err.stack);
-      socket.emit("messageError", { error: "Failed to send message" });
-    }
-  });
 
+        const result = await queryDatabase(
+            `INSERT INTO messages (sender_id, receiver_id, message, status) 
+             VALUES ($1, $2, $3, $4) RETURNING id, created_at`,
+            [senderId, receiverId, message.trim(), "sent"]
+        );
+
+        if (!result || result.length === 0) {
+            socket.emit("messageError", { error: "Failed to save message" });
+            return;
+        }
+
+        const messageData = result[0];
+        const messageId = messageData?.id;
+        
+        // ✅ GET COMPLETE SENDER INFO
+        const senderInfo = await queryDatabase(
+            `SELECT user_id, name, email, role, is_online FROM messaging_users WHERE user_id = $1`,
+            [senderId]
+        );
+
+        const receiverSocketId = users.get(receiverId);
+        
+        if (receiverSocketId) {
+            // ✅ SEND COMPLETE SENDER INFO to receiver
+            io.to(receiverSocketId).emit("receiveMessage", {
+                id: messageId,
+                senderId,
+                senderName: senderInfo[0]?.name || 'Unknown User',
+                senderEmail: senderInfo[0]?.email || '',
+                senderRole: senderInfo[0]?.role || 'student',
+                senderOnline: users.has(senderId), // Real-time online status
+                message: message.trim(),
+                timestamp: messageData.created_at,
+                status: 'delivered'
+            });
+
+            const isActiveChat = activeChats.get(receiverId) === senderId;
+
+            if (isActiveChat) {
+                await queryDatabase("UPDATE messages SET status = $1 WHERE id = $2", ["read", messageId]);
+                
+                const senderSocketId = users.get(senderId);
+                if (senderSocketId) {
+                    io.to(senderSocketId).emit("messagesRead", {
+                        peerId: receiverId,
+                        all: true
+                    });
+                }
+            } else {
+                await queryDatabase("UPDATE messages SET status = $1 WHERE id = $2", ["delivered", messageId]);
+                
+                const senderSocketId = users.get(senderId);
+                if (senderSocketId) {
+                    io.to(senderSocketId).emit("messagesDelivered", {
+                        peerId: receiverId,
+                        all: true
+                    });
+                }
+            }
+        } else {
+            console.log(`📵 Receiver ${receiverId} is offline`);
+        }
+        
+        socket.emit("messageSent", { 
+            messageId, 
+            timestamp: messageData.created_at 
+        });
+        
+    } catch (err) {
+        console.error("❌ sendMessage error:", err.message);
+        console.error(err.stack);
+        socket.emit("messageError", { error: "Failed to send message" });
+    }
+});
 
     socket.on("activeChat", ({ peerId }) => {
       activeChats.set(userId, peerId);
